@@ -1,0 +1,7 @@
+[gd_resource type="QuadMesh" load_steps=2 format=3 uid="uid://dt6lqf2kap4m1"]
+
+[sub_resource type="ORMMaterial3D" id="ORMMaterial3D_metla"]
+
+[resource]
+material = SubResource("ORMMaterial3D_metla")
+size = Vector2(10, 10)
