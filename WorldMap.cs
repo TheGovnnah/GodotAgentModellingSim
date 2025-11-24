@@ -7,10 +7,10 @@ using System.Numerics;
 
 public class Map
 {
-    public int[,] humanSpawnLocations = new int[10000,10000];
+    public int[,] humanSpawnLocations = new int[1000,1000];
 
     public int totalPop = 0;
-
+    public int populatedCells = 0;
     string locationsFile = "/home/francis/Documents/CodingProjects/ClearTextArray.txt";
 
     //upon initialisation, writes the 30/30m population data to the humanspawnlocations array, to be used by the program
@@ -34,12 +34,13 @@ public class Map
                             int humansInCell = (int)Math.Round(float.Parse(stringLine[j]));
                             humanSpawnLocations[i,j] = humansInCell;
                             totalPop += humansInCell;
+                            populatedCells ++;
                     }
                 }
                 i++;
             }
         }
-        GD.Print($"Map loaded, total population {totalPop}");
+        GD.Print($"Map loaded, total population {totalPop}, populated cells : {populatedCells}");
 
     }
 }

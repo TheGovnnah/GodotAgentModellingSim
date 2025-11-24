@@ -59,7 +59,7 @@ public abstract class Population
         
     }
 
-    public Population(Agent[] agentsInPop, ref Environment environment, string fileLocationOFMesh, Node2D parent)
+    /*public Population(Agent[] agentsInPop, ref Environment environment, string fileLocationOFMesh, Node2D parent)
     {
         populationSize = agentsInPop.Length;
         this.environment = environment;
@@ -165,22 +165,39 @@ public abstract class Population
 public class HumanPopulation : Population
 {
     Map spawnMap;
-    public HumanPopulation(int popSize, ref Environment environment, Node2D parent, ref Map spawnMap) : base(spawnMap.totalPop, ref environment, parent)
+    public HumanPopulation(int popSize, ref Environment environment, Node2D parent, ref Map spawnMap) : base(popSize, ref environment, parent)
     { 
-        this.spawnMap = spawnMap;
+        /*this.spawnMap = spawnMap;
         int count = 0;
-        for(int i =0; i < 10000; i++)
+        for(int i =0; i < 1000; i++)
         {
-            for(int j =0; j < 10000; j++)
+            for(int j =0; j < 1000; j++)
             {
                 for(int k = 0; k < spawnMap.humanSpawnLocations[i,j]; k++)
                 {
-                    if( spawnMap.humanSpawnLocations[i,j] != 0){
-                    Vector2 startPos = new Vector2((GD.Randf()+ i)*29.9f, (GD.Randf()+j)*29.9f);
+                    if(spawnMap.humanSpawnLocations[i,j] != 0){
+                    Vector2 startPos = new Vector2((GD.Randf()+ i)*30f, (GD.Randf()+j)*30f);
                     agents[count] = new Agent.Human(startPos,ref environment);
                     count++;
                     }
                 }
+            }
+        }
+        agents[0].infected = true; // Infect first human for testing
+        schedulePopulationAIsteps();*/
+        for(int j = 0; j < 100; j++)
+        {
+            Vector2 clusterPos = new Vector2(GD.Randf() * environment.cellsPerRow * environment.cellSize, GD.Randf() * environment.cellsPerRow * environment.cellSize);
+        
+            for (int i = 0; i < popSize /100; i++)
+            {   
+
+            Vector2 startPos = new Vector2(GD.Randf() * environment.cellSize, GD.Randf()* environment.cellSize);
+            agents[i + (j * popSize / 100)] = new Agent.Human(startPos + clusterPos, ref environment);
+
+
+            // AI compute section
+
             }
         }
         agents[0].infected = true; // Infect first human for testing
@@ -197,7 +214,10 @@ public class MosquitoPopulation : Population
             Vector2 startPos = new Vector2(GD.Randf() * environment.width, GD.Randf() * environment.height);
             agents[i] = new Agent.Mosquito(startPos, ref environment);
         }
-        agents[0].infected = true; // Infect first mosquito for testing
+        //for(int j =0; j <10; j++){
+        //agents[j].infected = true; // Infect first mosquito for testing
+        //}
+        agents[0].infected = true;
         schedulePopulationAIsteps();
     }
 }

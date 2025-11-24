@@ -8,9 +8,12 @@ public class Environment
 
     public Cell[,] grid;
 
+    public int[,] dijkstraMap;
+
     public int cellsPerRow;
     public Environment(int width, int height, int cellSize)
     {
+        this.cellSize = cellSize;
         this.width = width;
         this.height = height;
         cellsPerRow = width / cellSize;

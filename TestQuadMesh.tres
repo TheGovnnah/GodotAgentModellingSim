@@ -4,4 +4,4 @@
 
 [resource]
 material = SubResource("ORMMaterial3D_metla")
-size = Vector2(10, 10)
+size = Vector2(100, 100)
