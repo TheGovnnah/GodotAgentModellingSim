@@ -20,7 +20,7 @@ public class Map
     }
     public void loadMap()
     {
-        using(StreamReader reader = File.OpenText(locationsFile))
+        /*using(StreamReader reader = File.OpenText(locationsFile))
         {
             string line;
             int i = 0;
@@ -41,6 +41,6 @@ public class Map
             }
         }
         GD.Print($"Map loaded, total population {totalPop}, populated cells : {populatedCells}");
-
+        */
     }
 }

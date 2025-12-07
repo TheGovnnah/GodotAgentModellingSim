@@ -8,7 +8,9 @@ public class Environment
 
     public Cell[,] grid;
 
-    public int[,] dijkstraMap;
+    public int[,] HumanDijkstraMap;
+
+    public int[,] MaleMosquitoDijkstraMap;
 
     public int cellsPerRow;
     public Environment(int width, int height, int cellSize)
