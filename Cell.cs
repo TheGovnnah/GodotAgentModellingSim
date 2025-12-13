@@ -55,10 +55,14 @@ public class Cell
 	}
 	public void addAgentToCell(Agent agent)
 	{
-		if(typeof(Agent) == typeof(MaleMosquito))
+		if(agent.GetType() == typeof(MaleMosquito))
             {
 				MaleMosquitoPopulation++;
             }
+		else if(agent.GetType() == typeof(Human))
+		{
+			humanPopulation++;
+		}
 		if (!subcellsUsed)
 		{
 			agentsInCell.Add(agent);
@@ -76,10 +80,15 @@ public class Cell
             {
 				MaleMosquitoPopulation--;
             }
+		else if(agent.GetType() == typeof(Human))
+		{
+			humanPopulation--;
+		}
 		if (!subcellsUsed)
 		{
 			agentsInCell.Remove(agent);
 		}
+		
 		else
 		{
 			int subcellX = (int)((agent.position.X % 1.0) * 10);
@@ -118,5 +127,17 @@ public class Cell
 			subCells = new Cell[10,10];
         }
     }
+
+	public bool checkCellForAgents(Type agentType)
+	{
+		foreach (Agent agent in GetAllAgentsInCell())
+		{
+			if (agent.GetType() == agentType)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 
 }

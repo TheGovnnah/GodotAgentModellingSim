@@ -1,6 +1,10 @@
+using Godot;
+using System.Collections.Generic;
+using System.Numerics;
 
 public class Environment
 {
+    public World world;
     public int width;
     public int height;
 
@@ -11,13 +15,13 @@ public class Environment
     public int[,] HumanDijkstraMap;
 
     public int[,] MaleMosquitoDijkstraMap;
-
     public int cellsPerRow;
-    public Environment(int width, int height, int cellSize)
+    public Environment(int width, int height, int cellSize, World world)
     {
         this.cellSize = cellSize;
         this.width = width;
         this.height = height;
+        this.world = world;
         cellsPerRow = width / cellSize;
         grid = new Cell[cellsPerRow, cellsPerRow];
         for (int i = 0; i < cellsPerRow; i++)

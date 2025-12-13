@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Threading;
 
@@ -16,19 +17,19 @@ public abstract class Agent
 	public float cellsPerRow;
 	public Color color;
 	protected int[] cellIndex = new int[2];
+    public Cell localCell;
 
     public bool agentActive = true;
-
+    public virtual void updateAiState(int newState, Agent agent){}
 	public Agent(Vector2 startPos, ref Environment environment)
 	{
 		cellsPerRow = environment.cellsPerRow;	
 		position = startPos;
 		this.environment = environment;
 
-		currentCell = environment.grid[(int)Math.Truncate(position.X / environment.cellSize), (int)Math.Truncate(position.Y / environment.cellSize)];
-		currentCell.GetAgentsInCell(ref position).Add(this);
 		calculateCellIndex();
-		
+		currentCell = localCell;
+        localCell.addAgentToCell(this);
 	}
     
 	public abstract void calculateAIStep();
@@ -41,20 +42,34 @@ public abstract class Agent
 		cellIndex[1] = (int)Math.Truncate(position.Y / environment.cellSize);
 		if (currentCell != environment.grid[cellIndex[0], cellIndex[1]])
 		{
+            localCell = environment.grid[cellIndex[0], cellIndex[1]];
 			Cell OldCell = currentCell;
-			currentCell = environment.grid[cellIndex[0], cellIndex[1]];
 			return new CellUpdate(OldCell, environment.grid[cellIndex[0], cellIndex[1]], this);
-			
 		}
 		else
 		{
 			return null;
 		}
+
 	}
+    public void moveAgent(Vector2 newPosition)
+    {
+            if(newPosition.X < 0 || newPosition.X >= environment.width || newPosition.Y < 0 || newPosition.Y >= environment.height)
+            {
+                position = new Vector2(Mathf.Clamp(newPosition.X, 0, environment.width - 0.1f), Mathf.Clamp(newPosition.Y, 0, environment.height - 0.1f));
+                calculateCellIndex();
+                return;
+            }
+            else
+            {
+                position = newPosition;
+                calculateCellIndex();
+            }
+    }
 
     public void death()
     {
-        currentCell.GetAgentsInCell(ref position).Remove(this);
+        localCell.GetAgentsInCell(ref position).Remove(this);
         agentActive = false;
     }
 }    
@@ -76,46 +91,22 @@ public abstract class Agent
         }
     }
     
-	public class Mosquito : Agent
-	{
-        Vector2 previousPosition = new Vector2();
-		protected int MosqutioAIstate = 4;
-        protected int previousAIstate = 4;
-        protected bool fertilised = false;
-		private Agent targetAgent = null;
-		Vector2 movementTarget;
-        protected int lifespan = 1440 * 152;//lifespan in minutes (1 day) * 152 days average lifespan
-		public Mosquito(Vector2 startPos, ref Environment environment) : base(startPos, ref environment)
-		{
-            previousPosition = startPos;
-		}
-        
-		public override void updateColor()
-		{
-            if (!agentActive)
-            {
-                color = new Color(0,0,0);
-            }
-			else if (infected)
-			{
-				color = new Color(1, 0, 0); // Red for infected
-			}
-			else if(!infected)
-			{
-				color = new Color(0, 1, 0); // Green for healthy
-			}
-            
-            //color = new Color(cellIndex[0] / cellsPerRow, cellIndex[1] / cellsPerRow, 0);
-		}
-
-		public override void calculateAIStep()
+    public class femaleMosquito : Mosquito
+    {
+        public femaleMosquito(Vector2 startPos, ref Environment environment) : base(startPos, ref environment)
         {
+            MosqutioAIstate = 4;
+        }
+        public override void calculateAIStep()
+        {
+            calculateCellIndex();
             //Mosquito specific AI step calculations
             lifespan--;
             if (lifespan <= 0)
             {
                 death();
                 MosqutioAIstate = 0;
+                agentActive = false;
             }
 
             switch (MosqutioAIstate)
@@ -126,37 +117,25 @@ public abstract class Agent
                     break;
                 case 1:
                     //selecting a human target
-                    float closestDistance = 999999f;
-                    targetAgent = null;
-                    foreach (Agent agent in currentCell.GetAgentsInCell(ref position))
+                    targetAgent = selectTargetAgent(typeof(Human));
+                    //if target found, move to target
+                    if (targetAgent != null)
                     {
-                        if (agent is Human)
-                        {
-                            float distance = position.DistanceTo(agent.position);
-                            if(distance < closestDistance && !agent.targeted && GD.Randf() > 0.75f)
-                            {
-                                closestDistance = distance;
-                            }
-                            targetAgent = agent;
-                            agent.targeted = true;
-                            previousAIstate = MosqutioAIstate;
-                            MosqutioAIstate = 2;
-                        }
+                        updateAiState(2);
+                        targetAgent.targeted = true;
+                        break;
                     }
-                    if (targetAgent == null)
+                else
                     {
-                        movementTarget = new Vector2(currentCell.X * environment.cellSize + GD.Randf() * environment.cellSize, currentCell.Y * environment.cellSize + GD.Randf() * environment.cellSize);
-                        previousAIstate = MosqutioAIstate;
-                        MosqutioAIstate = 5;
+                        //debug
                     }
                     break;
                 case 2:
                     //moving to target:
-                    position = position.MoveToward(targetAgent.position, speed);
-                    if (position.DistanceTo(targetAgent.position) < 5)
+                    if (moveToTarget(targetAgent.position))
                     {
-                        previousAIstate = MosqutioAIstate;
-                        MosqutioAIstate = 3;
+                        updateAiState(3);
+                        targetAgent.targeted = false;
                     }
                     break;
                 case 3:
@@ -173,98 +152,256 @@ public abstract class Agent
                                     infected = true;
                                     break;
                                 }
-                    previousAIstate = MosqutioAIstate;
-                    MosqutioAIstate = 6;
+                    updateAiState(7);
                     targetAgent.targeted = false;
                     break;
                 case 4:
                     //navigate to humans based on djikstra map
                     movementTarget = selectDijkstraMove(environment.HumanDijkstraMap);
-                    previousAIstate = MosqutioAIstate;
-                    MosqutioAIstate = 5;
+                    updateAiState(5);
                     break;
                 case 5:
                 //move to movement target
-                    position = position.MoveToward(movementTarget, speed);
-                    
-                    if (position.DistanceTo(movementTarget) < 5)
+                    if (moveToTarget(movementTarget))
                     {
                         switch (previousAIstate)
                         {
                             case 4:
-                                calculateCellIndex();
-                                foreach (Agent agent in currentCell.GetAllAgentsInCell())
+                                if (localCell.checkCellForAgents(typeof(Human)))
                                 {
-                                    if (agent is Human)
-                                    {
-                                        previousAIstate = MosqutioAIstate;
-                                        MosqutioAIstate = 1;
-                                        break;
-                                    }
+                                    updateAiState(1);
+                                    break;
                                 }
-                                if (MosqutioAIstate != 1)
+                                else
                                 {
-                                    previousAIstate = MosqutioAIstate;
-                                    MosqutioAIstate = 4;
+                                    updateAiState(4);
+                                    break;
                                 }
-                                break;
+                            case 7:
+                                if (localCell.checkCellForAgents(typeof(MaleMosquito)))
+                                {
+                                    updateAiState(8);
+                                    break;
+                                }
+                                else
+                                {
+                                    updateAiState(7);
+                                    break;
+                                }
                             case 6:
-                                foreach(Agent agent in currentCell.GetAllAgentsInCell())
-                                {
-                                    if (agent is MaleMosquito)
-                                    {
-                                        previousAIstate = MosqutioAIstate;
-                                        MosqutioAIstate = 8;
-                                        break;
-                                    }
-                                }
-                                if(MosqutioAIstate != 8)
-                                {
-                                    previousAIstate = MosqutioAIstate;
-                                    MosqutioAIstate = 7;
-                                }
+                                updateAiState(4);
                                 break;
                         }
-                        
                     }
                     break;
                 case 6:
                 //move to random position
                 //select a random movement target
-                    float targetCellX = GD.Randf() * environment.width ;
-                    float targetCellY = GD.Randf() * environment.height;
+                    float targetCellX = GD.Randf() * (environment.width -1);
+                    float targetCellY = GD.Randf() * (environment.height -1);
                     movementTarget = new Vector2(targetCellX, targetCellY);
-                    previousAIstate = MosqutioAIstate;
-                    MosqutioAIstate = 5;
+                    updateAiState(5);
                     break;
                 case 7:
                     //attempt to move to male mosquitoes via dikstra map
                     movementTarget = selectDijkstraMove(environment.MaleMosquitoDijkstraMap);
-                    previousAIstate = MosqutioAIstate;
-                    MosqutioAIstate = 5;
+                    updateAiState(5); 
                     break;
                 case 8:
                     //attempt to breed
-                    calculateCellIndex();
-                    foreach(Agent agent in currentCell.GetAllAgentsInCell())
+                    targetAgent = selectTargetAgent(typeof(MaleMosquito));
+                    
+                    if(targetAgent != null)
                     {
-                        if (agent is MaleMosquito maleMosquito && !maleMosquito.hasBreedingPartner)
-                        {
-                            fertilised = true;
-                            previousAIstate = MosqutioAIstate;
-                            MosqutioAIstate = 4;
-                            break;
-                        }
+                        targetAgent.updateAiState(3, this);
+                        updateAiState(9);
+                    }
+                else
+                {
+                    break;
+                }
+                    break;      
+
+                case 9:
+                    //go to male mosquito
+                    if(moveToTarget(targetAgent.position))
+                    {
+                        fertilised = true;
+                        targetAgent.targeted = false;
+                        updateAiState(6);
                     }
                     break;
-                case 9:
-                    //go to breeding site
+                case 10:
+                    //select breeding site
+                    targetAgent = selectClosestFromList(environment.world.populations[2].agents.ToList());
+                    updateAiState(11);
+                    break;
+                case 11:
+                //move to breeding site
+                if (moveToTarget(targetAgent.position))
+                {
+                    targetAgent.targeted = false;
+                    fertilised = false;
+                    updateAiState(12);
+                }
+                break;
+                case 12:
+                    //lay eggs
+                    for(int i = 0; i < 10; i++)
+                    {
+                        Vector2 eggPos = position + new Vector2((GD.Randf() - 0.5f) * 10, (GD.Randf() - 0.5f) *10);
+                        if(GD.Randf() < 0.5f)
+                        {
+                            environment.world.populations[1].addAgent(new femaleMosquito(eggPos, ref environment));
+                        }
+                        else
+                        {
+                            environment.world.populations[2].addAgent(new MaleMosquito(eggPos, ref environment));
+                        }
+                    }    
                     break;
             }
+            
+            if(oldPosition == position)
+            {
+                stuckCounter++;
+            }
+            else
+            {
+                stuckCounter = 0;
+            }
+            oldPosition = position;
+            if(stuckCounter >= 100)
+            {
+                //GD.Print("mosquito stuck");
+            }
         }
+    }
+	public class Mosquito : Agent
+	{
+        public Vector2 oldPosition;
+        public int stuckCounter = 0;
+		protected int MosqutioAIstate = 4;
+        protected int previousAIstate = 4;
+        protected bool fertilised = false;
+		public Agent targetAgent = null;
+		protected Vector2 movementTarget;
+        protected int lifespan = 1440 * 152;//lifespan in minutes (1 day) * 152 days average lifespan
+		public Mosquito(Vector2 startPos, ref Environment environment) : base(startPos, ref environment)
+		{
+            oldPosition = startPos;
+		}
 
+		public override void updateColor()
+		{
+            if (!agentActive)
+            {
+                color = new Color(0,0,0);
+            }
+            if(stuckCounter >= 100)
+            {
+                color = new Color(1, 0, 1); // Magenta for stuck
+            }
+			else if (infected)
+			{
+				color = new Color(1, 0, 0); // Red for infected
+			}
+			else if(!infected)
+			{
+				color = new Color(0, 1, 0); // Green for healthy
+			}
+            
+            //color = new Color(cellIndex[0] / cellsPerRow, cellIndex[1] / cellsPerRow, 0);
+		}
+
+		public override void calculateAIStep()
+        {
+            calculateCellIndex();
+            //Mosquito specific AI step calculations
+            lifespan--;
+            if (lifespan <= 0)
+            {
+                death();
+                MosqutioAIstate = 0;
+                agentActive = false;
+            }
+        }
+        //Returns the closest agent of the specified type within the current cell, null if none found
+        public Agent selectTargetAgent(Type agentType)
+        {
+            calculateCellIndex();
+            Agent selectedAgent = null;
+            float closestDistance = 999999f;
+            foreach (Agent agent in localCell.GetAgentsInCell(ref position))
+            {
+                if (agent.GetType() == agentType && !agent.targeted)
+                {
+                    float distance = position.DistanceTo(agent.position);
+                    if (distance < closestDistance)
+                    {
+                        closestDistance = distance;
+                        selectedAgent = agent;
+                        agent.targeted = true;
+                    }
+                }
+            }
+            if (selectedAgent == null && localCell.subcellsUsed == true)
+            {
+                calculateCellIndex();
+                foreach (Cell subcell in localCell.subCells)
+                {
+                    if(subcell.checkCellForAgents(agentType))
+                    {
+                        foreach (Agent agent in subcell.GetAllAgentsInCell())
+                        {
+                            if (agent.GetType() == agentType)
+                            {
+                                float distance = position.DistanceTo(agent.position);
+                                if (distance <= closestDistance)
+                                {
+                                    closestDistance = distance;
+                                    selectedAgent = agent;
+                                    //agent.targeted = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return selectedAgent;
+        }
+        public Agent selectClosestFromList(System.Collections.Generic.List<Agent> agentList)
+        {
+            Agent selectedAgent = null;
+            float closestDistance = 999999f;
+            foreach (Agent agent in agentList)
+            {
+                if(agent != null)
+                {
+                    float distance = position.DistanceTo(agent.position);
+                    if (distance < closestDistance)
+                    {
+                        closestDistance = distance;
+                        selectedAgent = agent;
+                    }
+                }
+            }
+            return selectedAgent;
+        }
+        //moves the agent towards the target position, returns true if within speed meters of target
+        public bool moveToTarget(Vector2 target)
+        {
+            moveAgent(position.MoveToward(target, speed));
+            if (position.DistanceTo(target) < speed+1)
+            {
+                return true;
+            }
+            return false;
+        }
+        //selects the best move based on the provided dijkstra map, returns the centre of the cell to move to
 		public Vector2 selectDijkstraMove(int[,] dikstraMap )
         {
+            calculateCellIndex();
             int selectedX = cellIndex[0];
             int selectedY = cellIndex[1];
             for(int i = -1; i <= 1; i++)
@@ -281,17 +418,29 @@ public abstract class Agent
                             selectedX = neighborX;
                             selectedY = neighborY;
                         }
+                        if(dikstraMap[neighborX,neighborY] == dikstraMap[selectedX,selectedY])
+                        {
+                            //randomly select between equal options
+                            if(GD.Randf() < 0.5f)
+                            {
+                                selectedX = neighborX;
+                                selectedY = neighborY;
+                            }
+                        }
                         
                     }
                 }
             }
             return new Vector2(selectedX * environment.cellSize + 15, selectedY * environment.cellSize + 15);
         }
+        public void updateAiState(int newState)
+        {
+            previousAIstate = MosqutioAIstate;
+            MosqutioAIstate = newState;
+        }
 	}
-
 	public class Human : Agent
 	{
-
 		public Human(Vector2 startPos, ref Environment environment) : base(startPos, ref environment)
         {
 			calculateCellIndex();
@@ -313,53 +462,79 @@ public abstract class Agent
 
 	}
 
-public class MaleMosquito : Mosquito 
+public class MaleMosquito : Mosquito
+{
+    private Vector2 breedingSiteTarget;
+
+    public MaleMosquito(Vector2 startPos, ref Environment environment) : base(startPos, ref environment)
     {
-        private Vector2 breedingSiteTarget;
+        lifespan = 1440 * GD.RandRange(3, 7); //lifespan in minutes (1 day) * 152 days average lifespan
+        breedingSiteTarget = selectClosestFromList(environment.world.populations[2].agents.ToList()).position;
+        MosqutioAIstate = 1;
+    }
 
-        public bool hasBreedingPartner = false;
-        public MaleMosquito(Vector2 startPos, ref Environment environment) : base(startPos, ref environment)
+    public override void updateColor()
+    {
+        color = new Color(0.5f, 0.5f, 0.5f); //
+    }
+    public override void calculateAIStep()
+    {
+        lifespan--;
+        if (lifespan <= 0)
         {
-            lifespan = 1440 * GD.RandRange(3, 7); //lifespan in minutes (1 day) * 152 days average lifespan
-            breedingSiteTarget = startPos;
-            MosqutioAIstate = 1;
-            calculateCellIndex();
+            death();
         }
-
-        public override void updateColor()
-        {
-            color = new Color(0.5f, 0.5f, 0.5f); //
-        }
-        public override void calculateAIStep()
-        {
-            lifespan--;
-            if (lifespan <= 0)
-            {
-                death();
-            }
 
         switch (MosqutioAIstate)
         {
             case 0:
                 //death case(does nothing)
                 break;
-            
+
             case 1:
                 //wander close to breeding site
-                position.X += (GD.Randf() - 0.5f) *2 * speed;
-                position.Y += (GD.Randf() - 0.5f) *2 * speed;
-
-                if (position.DistanceTo(breedingSiteTarget) >= 40)
-                MosqutioAIstate = 2;
+                if (position.DistanceTo(breedingSiteTarget) >= 100)
+                {
+                    movementTarget = breedingSiteTarget;
+                    updateAiState(4);
+                }
+                else
+                {
+                    //select a random movement target near breeding site
+                    float targetCellX = breedingSiteTarget.X + (GD.Randf() - 0.5f) * 1000;
+                    float targetCellY = breedingSiteTarget.Y + (GD.Randf() - 0.5f) * 1000;
+                    movementTarget = new Vector2(targetCellX, targetCellY);
+                    updateAiState(4);
+                }
                 break;
             case 2:
                 position.MoveToward(breedingSiteTarget, speed);
                 MosqutioAIstate = 1;
                 break;
+            case 3:
+                //updated breeding target from female
+                if (moveToTarget(targetAgent.position))
+                {
+                    updateAiState(1);
+                    targetAgent.targeted = false;
+                }    
+                break;
+            case 4:
+                //move to movement target
+                if (moveToTarget(movementTarget))
+                {
+                    updateAiState(1);
+                }
+                break;
         }
-            //male mosquitos linger around breeding sites & swarm (subcells needed probably)
-            calculateCellIndex();
+        //male mosquitos linger around breeding sites & swarm (subcells needed probably)
+        calculateCellIndex();
 
-        }
-        
     }
+    public override void updateAiState(int newState, Agent agent)
+    {
+        previousAIstate = MosqutioAIstate;
+        MosqutioAIstate = newState;
+        targetAgent = agent;
+    }
+}

@@ -6,6 +6,7 @@ using Godot;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Collections;
+using Godot.NativeInterop;
 public abstract class Population
 {
     //This class will manage populations of differet agent types
@@ -15,7 +16,7 @@ public abstract class Population
 
     //Population Data
     private int populationSize { get; }
-    protected Agent[] agents { get; }
+    public Agent[] agents { get;set; }
     protected MultiMeshinst multimesh { get; }
     protected Environment environment;
     public Vector2[] positions;
@@ -107,10 +108,16 @@ public abstract class Population
     {
         foreach (var update in cellUpdates)
         {
-            if (update.oldCell != update.newCell)
-            {
-                update.oldCell.removeAgentFromCell(update.agent);
+            if(update.agent != null){
+                if (update.oldCell != update.newCell && update.oldCell != null)
+                {
+                    update.oldCell.removeAgentFromCell(update.agent);
+                }
                 update.newCell.addAgentToCell(update.agent);
+            }
+            else
+            {
+                break;
             }
         }
     }
@@ -171,9 +178,10 @@ public abstract class Population
     public void removeAgent(int agentIndex)
     {
         freeMultimeshSpaces.Append(agentIndex);
+        agents[agentIndex].currentCell.removeAgentFromCell(agents[agentIndex]);
     }
 
-    public void addAgent(Agent agent)
+    public virtual void addAgent(Agent agent)
     {
         if(freeMultimeshSpaces.TryDequeue(out int output))
         {
@@ -233,6 +241,31 @@ public class MosquitoPopulation : Population
         for (int i = 0; i < popSize; i++)
         {
             Vector2 startPos = new Vector2(GD.Randf() * environment.width, GD.Randf() * environment.height);
+
+            if(GD.Randf() < 0.5f)
+            {
+                agents[i] = new femaleMosquito(startPos, ref environment);
+            }
+            else
+            {
+                agents[i] = new MaleMosquito(startPos, ref environment);
+            }
+        }
+        //for(int j =0; j <10; j++){
+        //agents[j].infected = true; // Infect first mosquito for testing
+        //}
+        agents[0].infected = true;
+        schedulePopulationAIsteps();
+    }
+
+}
+public class femaleMosquitoPopulation : Population
+{
+    public femaleMosquitoPopulation(int popSize, ref Environment environment, Node2D parent) : base(popSize, ref environment, parent)
+    {
+        for (int i = 0; i < popSize; i++)
+        {
+            Vector2 startPos = new Vector2(GD.Randf() * environment.width, GD.Randf() * environment.height);
             agents[i] = new Mosquito(startPos, ref environment);
         }
         //for(int j =0; j <10; j++){
@@ -252,6 +285,19 @@ public class MaleMosquitoPopulation : Population
         {
             Vector2 startPos = breedingSitePos + new Vector2(GD.Randf() * 100, GD.Randf() * 100);
             agents[i] = new MaleMosquito(startPos, ref environment);
+        }
+        schedulePopulationAIsteps();
+    }
+}
+
+public class breedingSites : Population
+{
+    public breedingSites(int popSize, ref Environment environment, Node2D parent) : base(popSize, ref environment, parent)
+    {
+        for (int i = 0; i < popSize; i++)
+        {
+            Vector2 startPos = new Vector2(GD.Randf() * environment.width, GD.Randf() * environment.height);
+            agents[i] = new breedingSite(startPos, ref environment);
         }
         schedulePopulationAIsteps();
     }
