@@ -6,68 +6,46 @@ using System.Threading.Tasks;
 using System.IO;
 public class World
 {
-    public Environment environment;
-    public Population[] populations = new Population[3];
-
+    private int initialHumanPopulation = 100;
+    private int initialMosquitoPopulation = 10;
+    private int initialBreedingSitePopulation = 1;
     private int worldHeight = 30000;
     public int worldWidth = 30000;
     public Node2D parentNode;
     public int cellSize = 60; 
     public int time = 0;
+    public Environment environment;
+    public Population[] populations = new Population[3];
+    public SimulationHandler simulationHandler;
 
     public World(Node2D parent)
     {
+        //initialise parent node, environment & simulation handler 
         parentNode = parent;
-        Map humanSpawnMap = new Map();
-        // initialize the environment class
         environment = new Environment(worldWidth, worldHeight,cellSize, this);
-        //Initialize populations here and add to populations array
-        populations[2] = new breedingSites(10, ref environment, parent);
-        populations[0] = new HumanPopulation(100, ref environment, parent, ref humanSpawnMap);
+        simulationHandler = new SimulationHandler((initialHumanPopulation + initialBreedingSitePopulation + initialMosquitoPopulation) * 100, environment, parentNode);
+        initialisePopulations();
+        //calculate djikstra map for humans at full scale
         environment.HumanDijkstraMap = DijkstraCalculator(parent, false, 1);
-        populations[1] = new MosquitoPopulation(1000, ref environment, parent);
-        
-
-        int CellsWithHumans = 0;
-        int totalPopulation = 0;
-        foreach(Cell cell in environment.grid)
-        {
-            if (cell.agentsInCell.Count > 0)
-            {
-                CellsWithHumans++;
-                totalPopulation += cell.agentsInCell.Count;
-                if (cell.agentsInCell.Count > 20)
-                {
-                    cell.enableSubcells();
-                    GD.Print($"Subcells enabled for cell at {cell.X}, {cell.Y} with {cell.GetAllAgentsInCell().Count} agents");
-                }
-            }
-        }
-        GD.Print("cells with humans: " + CellsWithHumans);
-        GD.Print("total population: " + totalPopulation);
-        
+        updateSubcells();
+        simulationHandler.startSimulation(populations);
 
     }
-
-    public void updateProcess()
+    
+    public void initialisePopulations()
     {
-        foreach (Population pop in populations)
-        {
-            if(pop.GetType() != typeof(MosquitoPopulation)){
-            pop.updatePopulationRendering();
-            }
-        }
-        populations[1].updatePopulationRendering(); // mosquitos
-        
-        if(time % 100 == 0)
-        {
-            environment.MaleMosquitoDijkstraMap = DijkstraCalculator(parentNode, true, 2);
-        }
-        
-        if(time % 100 == 0){
-            Parallel.For(0,worldHeight/cellSize, i =>
+        Map humanSpawnMap = new Map();
+        populations[2] = new breedingSites(initialBreedingSitePopulation, ref environment, parentNode);
+        populations[0] = new HumanPopulation(initialHumanPopulation, ref environment, parentNode, ref humanSpawnMap);
+        populations[1] = new MosquitoPopulation(initialMosquitoPopulation, ref environment, parentNode);        
+    }
+
+    public void updateSubcells()
+    {
+        //GD.Print("calculating where to enable subcells");
+        Parallel.For(0,worldHeight/cellSize, i =>
             {
-                for(int j = 0; j < worldHeight/cellSize; j++)
+                Parallel.For(0,worldHeight/cellSize, j =>
                 {
                     if (environment.grid[i,j].GetAllAgentsInCell().Count >= 10)
                     {
@@ -77,9 +55,19 @@ public class World
                     {
                         environment.grid[i,j].disableSubcells();
                     }
-                }
+                });
             });
+    }
+
+    public void updateProcess()
+    {
+        simulationHandler.updatePopulationRendering();
+        //operations to happen at specific times
+        if(time % 100 == 0)
+        {
+            //environment.MaleMosquitoDijkstraMap = DijkstraCalculator(parentNode, true, 1);
         }
+        
         //GD.Print("World Time: " + time +"minutes");
         time++;
     }
@@ -113,7 +101,7 @@ public class World
                     }
                     if(localCount != 0)
                     {
-                        djikstraMap.map[i,j] = -(int)Math.Truncate(localCount/10d)^2;
+                        djikstraMap.map[i,j] = -(int)Math.Truncate(localCount/10d);
                     }
                 }
             }
@@ -137,7 +125,7 @@ public class World
                         }
                         if(localCount != 0)
                         {
-                            djikstraMap.map[i,j] = -(int)Math.Truncate((double)localCount)^2;
+                            djikstraMap.map[i,j] = -(int)Math.Truncate((double)localCount/10d)^2;
                         }         
                     }
                 }
@@ -172,7 +160,7 @@ public class World
                     }
                 }
             }
-            
+        
         }
         
         for (int i = 0; i < NumCells; i++)

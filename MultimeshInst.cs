@@ -45,6 +45,7 @@ public class MultiMeshinst
 
     public void UpdateTransform(int populationCount, Vector2[] positions, Color[] colors)
     {
+        multimesh.VisibleInstanceCount = populationCount;
         buffer=multimesh.Buffer;
 		Parallel.For(0, populationCount, i =>
 		{

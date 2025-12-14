@@ -8,6 +8,7 @@ using System.Threading;
 
 public abstract class Agent
 {
+    public int index {get; set;}
 	public int speed = 30;
 	public Vector2 position;
 	public volatile bool infected;
@@ -18,17 +19,16 @@ public abstract class Agent
 	public Color color;
 	protected int[] cellIndex = new int[2];
     public Cell localCell;
-
     public bool agentActive = true;
     public virtual void updateAiState(int newState, Agent agent){}
-	public Agent(Vector2 startPos, ref Environment environment)
+	public Agent(Vector2 startPos, ref Environment environment, int index)
 	{
+        this.index = index;
 		cellsPerRow = environment.cellsPerRow;	
 		position = startPos;
 		this.environment = environment;
 
 		calculateCellIndex();
-		currentCell = localCell;
         localCell.addAgentToCell(this);
 	}
     
@@ -36,23 +36,30 @@ public abstract class Agent
 
 	public abstract void updateColor();
 
-	public CellUpdate? calculateCellIndex()
+	public void calculateCellIndex()
 	{
 		cellIndex[0] = (int)Math.Truncate(position.X / environment.cellSize);
 		cellIndex[1] = (int)Math.Truncate(position.Y / environment.cellSize);
 		if (currentCell != environment.grid[cellIndex[0], cellIndex[1]])
 		{
-            
-			Cell OldCell = currentCell;
             localCell = environment.grid[cellIndex[0], cellIndex[1]];
+		}
+	}
+    public CellUpdate? returnCellUpdate()
+    {
+        cellIndex[0] = (int)Math.Truncate(position.X / environment.cellSize);
+		cellIndex[1] = (int)Math.Truncate(position.Y / environment.cellSize);
+		if (currentCell != environment.grid[cellIndex[0], cellIndex[1]])
+		{
+			Cell OldCell = currentCell;
+            currentCell = environment.grid[cellIndex[0], cellIndex[1]];
 			return new CellUpdate(OldCell, environment.grid[cellIndex[0], cellIndex[1]], this);
 		}
 		else
 		{
 			return null;
 		}
-
-	}
+    }
     public void moveAgent(Vector2 newPosition)
     {
             if(newPosition.X < 0 || newPosition.X >= environment.width || newPosition.Y < 0 || newPosition.Y >= environment.height)
@@ -78,7 +85,7 @@ public abstract class Agent
     public class breedingSite : Agent
     {
         public int capacity;
-        public breedingSite(Vector2 startPos, ref Environment environment) : base(startPos, ref environment)
+        public breedingSite(Vector2 startPos, ref Environment environment, int index) : base(startPos, ref environment, index)
         {
         }
 
@@ -94,7 +101,7 @@ public abstract class Agent
     
     public class femaleMosquito : Mosquito
     {
-        public femaleMosquito(Vector2 startPos, ref Environment environment) : base(startPos, ref environment)
+        public femaleMosquito(Vector2 startPos, ref Environment environment, int index) : base(startPos, ref environment, index)
         {
             MosqutioAIstate = 4;
         }
@@ -145,7 +152,6 @@ public abstract class Agent
                                 {
                                     targetAgent.infected = true;
                                     targetAgent.updateColor();
-                                    targetAgent.calculateAIStep();
                                     break;
                                     }
                                 else if (!infected && targetAgent.infected)
@@ -206,7 +212,7 @@ public abstract class Agent
                     break;
                 case 7:
                     //attempt to move to male mosquitoes via dikstra map
-                    movementTarget = selectDijkstraMove(environment.MaleMosquitoDijkstraMap);
+                    movementTarget = selectClosestFromList(environment.world.populations[2].agents.ToList()).position;
                     updateAiState(5); 
                     break;
                 case 8:
@@ -215,12 +221,11 @@ public abstract class Agent
                     
                     if(targetAgent != null)
                     {
-                        targetAgent.updateAiState(3, this);
                         updateAiState(9);
                     }
                     else
                     {   
-                        updateAiState(4);
+                        updateAiState(7);
                         break;
                     }
                     break;      
@@ -250,18 +255,19 @@ public abstract class Agent
                 break;
                 case 12:
                     //lay eggs
-                    for(int i = 0; i < 10; i++)
+                    for(int i = 0; i < 1; i++)
                     {
-                        Vector2 eggPos = position + new Vector2((GD.Randf() - 0.5f) * 10, (GD.Randf() - 0.5f) *10);
+                        Vector2 eggPos = position;
                         if(GD.Randf() < 0.5f)
                         {
-                            environment.world.populations[1].addAgent(new femaleMosquito(eggPos, ref environment));
+                            environment.world.simulationHandler.addAgent(new femaleMosquito(eggPos, ref environment,0));
                         }
                         else
                         {
-                            environment.world.populations[1].addAgent(new MaleMosquito(eggPos, ref environment));
+                            environment.world.simulationHandler.addAgent(new MaleMosquito(eggPos, ref environment,0));
                         }
                     }    
+                    updateAiState(6);
                     break;
             }
             
@@ -290,7 +296,7 @@ public abstract class Agent
 		public Agent targetAgent = null;
 		protected Vector2 movementTarget;
         protected int lifespan = 1440 * 152;//lifespan in minutes (1 day) * 152 days average lifespan
-		public Mosquito(Vector2 startPos, ref Environment environment) : base(startPos, ref environment)
+		public Mosquito(Vector2 startPos, ref Environment environment, int index) : base(startPos, ref environment, index)
 		{
             oldPosition = startPos;
 		}
@@ -332,6 +338,7 @@ public abstract class Agent
         //Returns the closest agent of the specified type within the current cell, null if none found
         public Agent selectTargetAgent(Type agentType)
         {
+
             calculateCellIndex();
             Agent selectedAgent = null;
             float closestDistance = 999999f;
@@ -364,7 +371,7 @@ public abstract class Agent
                                 {
                                     closestDistance = distance;
                                     selectedAgent = agent;
-                                    //agent.targeted = true;
+                                    agent.targeted = true;
                                 }
                             }
                         }
@@ -447,7 +454,7 @@ public abstract class Agent
 	}
 	public class Human : Agent
 	{
-		public Human(Vector2 startPos, ref Environment environment) : base(startPos, ref environment)
+		public Human(Vector2 startPos, ref Environment environment, int index) : base(startPos, ref environment, index)
         {
 			calculateCellIndex();
         }
@@ -472,7 +479,7 @@ public class MaleMosquito : Mosquito
 {
     private Vector2 breedingSiteTarget;
 
-    public MaleMosquito(Vector2 startPos, ref Environment environment) : base(startPos, ref environment)
+    public MaleMosquito(Vector2 startPos, ref Environment environment, int index) : base(startPos, ref environment, index)
     {
         lifespan = 1440 * GD.RandRange(3, 7); //lifespan in minutes (1 day) * 152 days average lifespan
         breedingSiteTarget = selectClosestFromList(environment.world.populations[2].agents.ToList()).position;

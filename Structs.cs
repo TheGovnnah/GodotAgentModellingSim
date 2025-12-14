@@ -1,3 +1,5 @@
+using System;
+using Godot;
 public struct CellUpdate
 {
     
@@ -37,5 +39,29 @@ public struct DjikstraMap
                 map[i, j] = int.MaxValue;
             }
         }
+    }
+}
+
+public struct AiUpdate
+{
+    public int index;
+	public Vector2 position;
+	public bool infected;
+	public Cell currentCell;
+    public Color color;
+    public bool agentActive;
+    public CellUpdate? cellUpdate;
+    public Agent spawnAgent;
+    
+    public AiUpdate(int index, Vector2 position, bool infected, Cell currentCell, Color color, bool agentActive, CellUpdate cellUpdate, Agent spawnAgent)
+    {
+        this.index = index;
+        this.position = position;
+        this.infected = infected;
+        this.currentCell = currentCell;
+        this.color = color;
+        this.agentActive = agentActive;
+        this.cellUpdate = cellUpdate;
+        this.spawnAgent = spawnAgent;
     }
 }

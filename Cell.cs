@@ -6,6 +6,7 @@ using Godot;
 
 public class Cell
 {
+	public int index; 
 	private int cellsize = 60;
 	public int humanPopulation = 0;
 	public int MaleMosquitoPopulation = 0;
@@ -76,7 +77,7 @@ public class Cell
 	}
 	public void removeAgentFromCell(Agent agent)
 	{
-		if(typeof(Agent) == typeof(MaleMosquito))
+		if(agent.GetType() == typeof(MaleMosquito))
             {
 				MaleMosquitoPopulation--;
             }
