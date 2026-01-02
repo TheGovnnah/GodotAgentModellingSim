@@ -6,17 +6,22 @@ using System.Threading.Tasks;
 using System.IO;
 public class World
 {
-    private int initialHumanPopulation = 100;
-    private int initialMosquitoPopulation = 10;
-    private int initialBreedingSitePopulation = 1;
+    //intial variables *TO BE REPLACED WITH A CONFIG FILE*
+    private int initialHumanPopulation = 2658;
+    private int initialMosquitoPopulation = 200;
+    private int initialBreedingSitePopulation = 10;
     private int worldHeight = 30000;
     public int worldWidth = 30000;
-    public Node2D parentNode;
     public int cellSize = 60; 
-    public int time = 0;
+    //Godot/environment initialising variables
+    public Node2D parentNode;
     public Environment environment;
     public Population[] populations = new Population[3];
     public SimulationHandler simulationHandler;
+    //book-keeping variables
+    public int tick = 0;
+    public SimulationState simulationState = new SimulationState();
+
 
     public World(Node2D parent)
     {
@@ -25,11 +30,11 @@ public class World
         environment = new Environment(worldWidth, worldHeight,cellSize, this);
         simulationHandler = new SimulationHandler((initialHumanPopulation + initialBreedingSitePopulation + initialMosquitoPopulation) * 100, environment, parentNode);
         initialisePopulations();
+
+        simulationHandler.startSimulation(populations);
         //calculate djikstra map for humans at full scale
         environment.HumanDijkstraMap = DijkstraCalculator(parent, false, 1);
         updateSubcells();
-        simulationHandler.startSimulation(populations);
-
     }
     
     public void initialisePopulations()
@@ -61,19 +66,19 @@ public class World
 
     public void updateProcess()
     {
+        simulationState.tick = tick;
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
         simulationHandler.updatePopulationRendering();
-        //operations to happen at specific times
-        if(time % 100 == 0)
-        {
-            //environment.MaleMosquitoDijkstraMap = DijkstraCalculator(parentNode, true, 1);
-        }
-        
-        //GD.Print("World Time: " + time +"minutes");
-        time++;
+        stopwatch.Stop();
+        //GD.Print($"Frame took {stopwatch.ElapsedMilliseconds} ms to complete");
+        stopwatch.Reset();
+        tick++;
     }
 
     public DjikstraMap DijkstraCalculator(Node2D parent, bool searchingForMosquitoes, int scale)
     {
+        GD.Print("initialising Dijkstra calculation");
         
         //calculates the djikstra map for human population density, should be ran before mosquitoes spawned
         int MapCellSize = cellSize * scale;

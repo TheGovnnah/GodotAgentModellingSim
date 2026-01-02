@@ -1,10 +1,51 @@
-[gd_scene load_steps=2 format=3 uid="uid://wdm6g07r5t8j"]
+[gd_scene load_steps=6 format=3 uid="uid://wdm6g07r5t8j"]
 
 [ext_resource type="Script" uid="uid://h04bmfpjadny" path="res://Main.cs" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://c0xlkqlbqqsvd" path="res://Camera2d.cs" id="2_0xm2m"]
+[ext_resource type="Script" uid="uid://wb48ua0mfvbs" path="res://Hud.cs" id="3_1bvp3"]
+[ext_resource type="Script" uid="uid://bhmoeko0bel41" path="res://TotalPopLabel.cs" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://b14xyhl7m3b5u" path="res://StatsContainer.cs" id="4_lquwl"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_ig7tw")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(19102, 10702)
-zoom = Vector2(0.03, 0.03)
+script = ExtResource("2_0xm2m")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="HUD" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("3_1bvp3")
+
+[node name="StatsContainer" type="GridContainer" parent="UI/HUD"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("4_lquwl")
+
+[node name="TimeLabel" type="Label" parent="UI/HUD/StatsContainer"]
+layout_mode = 2
+
+[node name="TotalPopLabel" type="Label" parent="UI/HUD/StatsContainer"]
+layout_mode = 2
+script = ExtResource("3_h2yge")
+
+[node name="HumanPop" type="Label" parent="UI/HUD/StatsContainer"]
+layout_mode = 2
+
+[node name="MosquitoPop" type="Label" parent="UI/HUD/StatsContainer"]
+layout_mode = 2
+
+[node name="MaleMosquitoPop" type="Label" parent="UI/HUD/StatsContainer"]
+layout_mode = 2
+
+[node name="FemaleMosquitoPop" type="Label" parent="UI/HUD/StatsContainer"]
+layout_mode = 2
+
+[node name="MosquitoLarvePop" type="Label" parent="UI/HUD/StatsContainer"]
+layout_mode = 2

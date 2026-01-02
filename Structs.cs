@@ -44,24 +44,13 @@ public struct DjikstraMap
 
 public struct AiUpdate
 {
-    public int index;
 	public Vector2 position;
-	public bool infected;
 	public Cell currentCell;
-    public Color color;
-    public bool agentActive;
     public CellUpdate? cellUpdate;
-    public Agent spawnAgent;
-    
-    public AiUpdate(int index, Vector2 position, bool infected, Cell currentCell, Color color, bool agentActive, CellUpdate cellUpdate, Agent spawnAgent)
+    public AiUpdate(int index, Vector2 position, bool infected, Cell currentCell, Color color, bool agentActive, CellUpdate? cellUpdate, Agent[] spawnAgents)
     {
-        this.index = index;
         this.position = position;
-        this.infected = infected;
         this.currentCell = currentCell;
-        this.color = color;
-        this.agentActive = agentActive;
         this.cellUpdate = cellUpdate;
-        this.spawnAgent = spawnAgent;
     }
 }

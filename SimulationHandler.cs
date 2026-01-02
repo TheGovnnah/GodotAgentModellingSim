@@ -7,11 +7,13 @@ using System.Threading;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Linq;
+using System.ComponentModel.Design;
+using System.Diagnostics;
 
 public class SimulationHandler
 {
     //top-level references
-    protected Environment environment;
+    public Environment environment;
 
     //agent information
     public Agent[] agents { get;set; }
@@ -23,10 +25,12 @@ public class SimulationHandler
 
     //multithreading variables
     protected Task aiComputeTask;
-    protected CellUpdate[] cellUpdates;
+    protected AiUpdate[] aiUpdates;
     private bool useBufferA = true;
     Vector2[] sourcePositions;
     Color[] sourceColors;
+    ConcurrentDictionary<Type, ConcurrentBag<IIntent>> intentsByType;
+    List<IintentResolver> intentResolvers;
 
     //multimesh variables
     public ConcurrentStack<int> freeMultimeshSpaces = new ConcurrentStack<int>();
@@ -49,13 +53,18 @@ public class SimulationHandler
         colorsA = new Color[cacheSize];
         positionsB = new Vector2[cacheSize];
         colorsB = new Color[cacheSize];
-        cellUpdates = new CellUpdate[cacheSize];
+        aiUpdates = new AiUpdate[cacheSize];
+        intentsByType = new ConcurrentDictionary<Type, ConcurrentBag<IIntent>>();
 
         //initialise the free space stack
         for(int i = cacheSize -1; i >= numAgents; i--)
         {
             freeMultimeshSpaces.Push(i);
         }
+
+        //initialise intent handlers
+        intentResolvers = new List<IintentResolver>{new addAgentResolver(this), new BreedingResolver(),new ExclusiveTargetResolver(),new BiteIntentResolver(), new updateCellResolver(), new updatePositionResolver(), new updateAiStateResolver(), new deactivateResolver(this), new updateMoveTargetResolver(), new UpdateTargetAgentResolver() };
+    
     }
     public void addAgents(Agent[] agentsToAdd)
     {
@@ -68,6 +77,8 @@ public class SimulationHandler
     {
         freeMultimeshSpaces.Push(agentIndex);
         agents[agentIndex].currentCell.removeAgentFromCell(agents[agentIndex]);
+        environment.world.simulationState.OnAgentRemoved(agents[agentIndex]);
+        agents[agentIndex] = null;
     }
 
     public virtual void addAgent(Agent agent)
@@ -76,7 +87,10 @@ public class SimulationHandler
         {
             agents[output] = agent;
             agent.index = output;
+            
             numAgents ++;
+            environment.world.simulationState.OnAgentAdded(agent);
+
         }
         else
         {
@@ -88,6 +102,8 @@ public class SimulationHandler
 
     public void schedulePopulationAIsteps()
     {
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
         if (aiComputeTask != null && !aiComputeTask.IsCompleted)
         {
             return; // Previous task is still running
@@ -95,60 +111,28 @@ public class SimulationHandler
 
         Vector2[]targetPositions = useBufferA ? positionsA : positionsB;
         Color[] targetColors = useBufferA ? colorsA : colorsB;
-        Array.Clear(cellUpdates, 0, cellUpdates.Length);
+        var agentFrame = agents.Where(a => a != null && a.agentActive).ToArray();
+        intentsByType = new ConcurrentDictionary<Type, ConcurrentBag<IIntent>>();
         aiComputeTask = Task.Run(() =>
         {
-            Parallel.For(0, environment.cellsPerRow, i =>
+            Parallel.For(0, agentFrame.Length, i =>
             {
-                Parallel.For(0,environment.cellsPerRow, j =>
+                Agent agent = agentFrame[i];
+                agent.calculateAIStep();
+                agent.updateColor();
+                agent.returnCellUpdate();
+                var localintents = agent.returnIntents();
+                foreach(IIntent intent in localintents)
                 {
-                    //if(!environment.grid[i,j].subcellsUsed)
-                    {
-                        Agent[] agentsInCell = environment.grid[i,j].GetAllAgentsInCell().ToArray();
-                        foreach(Agent agent in agentsInCell)
-                        {
-                            agent.calculateAIStep();
-                            if (!agent.agentActive)
-                            {
-                                removeAgent(agent.index);
-                            }
-                            var update = agent.returnCellUpdate();
-
-                            if (update.HasValue)
-                            {
-                                cellUpdates[agent.index] =update.Value;
-                            }
-                            targetPositions[agent.index] = agent.position;
-                            agent.updateColor();
-                            targetColors[agent.index] = agent.color;
-                        }
-                    }
-                    /*else
-                    {
-                        Parallel.For(0, 100, k =>
-                        {
-                            foreach(Agent agent in environment.grid[i,j].subCells[(int)Math.Truncate(k/10f),k%10].GetAllAgentsInCell())
-                            {
-                                agent.calculateAIStep();
-                                if (!agent.agentActive)
-                                {
-                                    removeAgent(agent.index);
-                                }
-                                var update = agent.returnCellUpdate();
-
-                                if (update.HasValue)
-                                {
-                                    cellUpdates[agent.index] =update.Value;
-                                }
-                                targetPositions[agent.index] = agent.position;
-                                agent.updateColor();
-                                targetColors[agent.index] = agent.color;
-                            }
-                        });
-                    }*/
-                });
+                    intentsByType.AddOrUpdate(intent.GetType(), new ConcurrentBag<IIntent>{intent},(_, bag) => { bag.Add(intent); return bag; });
+                }
+                targetPositions[i] = agent.position;
+                targetColors[i] = agent.color;
+                agent.clearIntents();
             });
         });
+        //GD.Print($"Frame took {stopwatch.Elapsed} s to compute");
+        stopwatch.Stop();
     }
 
     public void updatePopulationRendering()
@@ -159,34 +143,27 @@ public class SimulationHandler
             sourcePositions = useBufferA ? positionsB : positionsA;
             sourceColors = useBufferA ? colorsB : colorsA;
 
-            applyCellUpdates();
+            applyAiUpdates();
             multimesh.UpdateTransform(numAgents, sourcePositions, sourceColors);
             schedulePopulationAIsteps();
         }
     }
 
-    public void applyCellUpdates()
+    public void applyAiUpdates()
     {
-        foreach (var update in cellUpdates)
+        environment.world.simulationState.resetCounters();
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
+        if(intentsByType.TryGetValue(intentResolvers[0].IntentType, out var intents))
+        intentResolvers[0].GenericResolve(intents,environment.world);
+        Parallel.ForEach(intentResolvers, intentResolver =>
         {
-            if(update.agent != null)
-            {
-                if (update.oldCell != update.newCell && update.oldCell != null)
-                {
-                    update.oldCell.removeAgentFromCell(update.agent);
-                }
-                update.newCell.addAgentToCell(update.agent);
-                update.agent.currentCell = update.newCell;
-                if(update.newCell.GetAllAgentsInCell().Count > 100)
-                {
-                    update.newCell.enableSubcells();
-                }
-                else
-                {
-                    update.newCell.disableSubcells();
-                }
-            }
-        }
+            if(!(intentResolver is addAgentResolver))
+            if(intentsByType.TryGetValue(intentResolver.IntentType, out var intents))
+            intentResolver.GenericResolve(intents, environment.world);
+        });
+        //GD.Print($"Apllying frame took {stopwatch.Elapsed} s to complete");
+        stopwatch.Stop();
     }
 
     public void startSimulation(Population[] populations)
