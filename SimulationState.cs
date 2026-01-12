@@ -8,7 +8,7 @@ public class SimulationState
     public int mosquitoPop;
     public int maleMosquitoPop;
     public int femaleMosquitoPop;
-    public int mosqutioLarvePop;
+    public int mosqutioLarvaePop;
     public int breedingSites;
 
     public int infectedHumanPop;
@@ -35,7 +35,7 @@ public class SimulationState
             if(agent is MaleMosquito) maleMosquitoPop ++;
             else femaleMosquitoPop++;
         }
-        else if(agent is mosqutioLarve) mosqutioLarvePop ++;
+        else if(agent is mosqutioLarve) mosqutioLarvaePop ++;
         else if (agent is breedingSite) breedingSites++;
     }
     public void OnAgentRemoved(Agent agent)
@@ -56,7 +56,7 @@ public class SimulationState
                 if(agent.infected) infectedMosqutioPop--;
             }
         }
-        else if(agent is mosqutioLarve) mosqutioLarvePop --;
+        else if(agent is mosqutioLarve) mosqutioLarvaePop --;
         else if (agent is breedingSite) breedingSites--;
 
         
@@ -71,6 +71,10 @@ public class SimulationState
         if(agent is Mosquito)
         {
             infectedMosqutioPop += agent.infected ? 1:-1;
+        }
+        if (agent.infected)
+        {
+            infectedThisTick ++;
         }
     }
 

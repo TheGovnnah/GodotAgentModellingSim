@@ -28,7 +28,7 @@ public class World
         //initialise parent node, environment & simulation handler 
         parentNode = parent;
         environment = new Environment(worldWidth, worldHeight,cellSize, this);
-        simulationHandler = new SimulationHandler((initialHumanPopulation + initialBreedingSitePopulation + initialMosquitoPopulation) * 100, environment, parentNode);
+        simulationHandler = new SimulationHandler(100000, environment, parentNode);
         initialisePopulations();
 
         simulationHandler.startSimulation(populations);

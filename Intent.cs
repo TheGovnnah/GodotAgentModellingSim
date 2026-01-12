@@ -149,13 +149,19 @@ public class BiteIntentResolver : IntentResolver<BiteIntent>
             owner.targetAgent = null;
             if(owner.infected)
             {
-                target.infected = true;
-                world.simulationState.OnInfectionChange(target);
+                if(!target.infected)
+                {
+                    target.infected = true;
+                    world.simulationState.OnInfectionChange(target);
+                }
             }
             else if (target.infected)
             {
-                owner.infected = true;
-                world.simulationState.OnInfectionChange(owner);
+                if(!owner.infected)
+                {
+                    owner.infected = true;
+                    world.simulationState.OnInfectionChange(owner);
+                }
             }
             world.simulationState.OnBite();
         }

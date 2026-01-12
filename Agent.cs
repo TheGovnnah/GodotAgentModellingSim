@@ -208,7 +208,7 @@ public abstract class Agent
                         switch (previousAIstate)
                         {
                             case 4:
-                                if (localCell.checkCellForAgents(typeof(Human)))
+                                if (localCell.checkCellForAgents(typeof(Human)) && GD.Randf() > 0.5)
                                 {
                                     updateAiState(1);
                                     break;

@@ -36,6 +36,6 @@ public partial class StatsContainer : GridContainer
 		MosquitoPopLabel.Text = $"Mosquito Population: {simulationState.mosquitoPop}";
 		MaleMosquitoPopLabel.Text = $"Male Mosquito Population: {simulationState.maleMosquitoPop}";
 		FemaleMosquitoPopLabel.Text = $"Female Mosquito Population: {simulationState.femaleMosquitoPop}";
-		MosquitoLarvePopLabel.Text = $"Mosquito Larve Population: {simulationState.mosqutioLarvePop}";
+		MosquitoLarvePopLabel.Text = $"Mosquito Larve Population: {simulationState.mosqutioLarvaePop}";
 	}
 }

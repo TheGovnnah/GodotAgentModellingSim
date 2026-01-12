@@ -67,7 +67,6 @@ public class MultiMeshinst
             buffer[offset + 9] = colors[i].G;  
             buffer[offset + 10] = colors[i].B;
             buffer[offset + 11] = colors[i].A;
-
 		});
 		multimesh.Buffer = buffer;
     }
