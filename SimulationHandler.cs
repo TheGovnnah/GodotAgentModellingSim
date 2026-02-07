@@ -61,7 +61,7 @@ public class SimulationHandler
         }
 
         //initialise intent handlers
-        intentResolvers = new List<IintentResolver>{new addAgentResolver(this), new BreedingResolver(),new ExclusiveTargetResolver(),new BiteIntentResolver(), new updateCellResolver(), new updatePositionResolver(), new updateAiStateResolver(), new deactivateResolver(this), new updateMoveTargetResolver(), new UpdateTargetAgentResolver() };
+        intentResolvers = new List<IintentResolver>{ new deactivateResolver(this),new addAgentResolver(this), new BreedingResolver(),new ExclusiveTargetResolver(),new BiteIntentResolver(), new updateCellResolver(), new updatePositionResolver(), new updateAiStateResolver(), new updateMoveTargetResolver(), new UpdateTargetAgentResolver() };
     
     }
     public void addAgents(Agent[] agentsToAdd)
@@ -73,18 +73,23 @@ public class SimulationHandler
     }
     public void removeAgent(int agentIndex)
     {
-        freeMultimeshSpaces.Push(agentIndex);
-        agents[agentIndex].currentCell.removeAgentFromCell(agents[agentIndex]);
-        environment.world.simulationState.OnAgentRemoved(agents[agentIndex]);
-        agents[agentIndex] = null;
+        
+        //if(agents[agentIndex] != null)
+        //{
+            freeMultimeshSpaces.Push(agentIndex);
+            agents[agentIndex].currentCell.removeAgentFromCell(agents[agentIndex]);
+            environment.world.simulationState.OnAgentRemoved(agents[agentIndex]);
+            agents[agentIndex] = null;
+        //}
     }
 
     public virtual void addAgent(Agent agent)
     {
         if(freeMultimeshSpaces.TryPop(out int output))
         {
-            agents[output] = agent;
             agent.index = output;
+            agents[output] = agent;
+            agent.returnCellUpdate();
             
             numAgents ++;
             environment.world.simulationState.OnAgentAdded(agent);

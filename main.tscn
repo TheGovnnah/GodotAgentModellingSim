@@ -53,6 +53,10 @@ layout_mode = 2
 [node name="MosquitoLarvePop" type="Label" parent="UI/HUD/StatsContainer"]
 layout_mode = 2
 
+[node name="SpawnGDButton" type="Button" parent="UI/HUD/StatsContainer"]
+layout_mode = 2
+text = "Spawn gene-drive affected mosquitoes"
+
 [node name="GraphContainer" type="GridContainer" parent="UI/HUD"]
 layout_mode = 1
 anchors_preset = 11

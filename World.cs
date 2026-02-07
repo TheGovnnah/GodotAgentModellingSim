@@ -7,7 +7,7 @@ using System.IO;
 public class World
 {
     //intial variables *TO BE REPLACED WITH A CONFIG FILE*
-    private int initialHumanPopulation = 2658;
+    private int initialHumanPopulation = 100; //2658;
     private int initialMosquitoPopulation = 200;
     private int initialBreedingSitePopulation = 10;
     private int worldHeight = 30000;
@@ -56,7 +56,7 @@ public class World
         stopwatch.Reset();
         tick++;
     }
-
+    
     public DjikstraMap DijkstraCalculator(int scale, Type agentType)
     {
         GD.Print("initialising Dijkstra calculation");

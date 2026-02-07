@@ -12,6 +12,7 @@ public partial class StatsContainer : GridContainer
 	private Label MaleMosquitoPopLabel;
 	private Label FemaleMosquitoPopLabel;
 	private Label MosquitoLarvePopLabel;
+	private Button SpawnGeneDriveButton;
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
@@ -23,7 +24,10 @@ public partial class StatsContainer : GridContainer
 		MaleMosquitoPopLabel = GetNode<Label>("MaleMosquitoPop");
 		FemaleMosquitoPopLabel = GetNode<Label>("FemaleMosquitoPop");
 		MosquitoLarvePopLabel = GetNode<Label>("MosquitoLarvePop");
+		SpawnGeneDriveButton = GetNode<Button>("SpawnGDButton");
 		simulationState = main.MainWorld.simulationState;
+
+		SpawnGeneDriveButton.Pressed += onGDButtonPressed;
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -37,5 +41,10 @@ public partial class StatsContainer : GridContainer
 		MaleMosquitoPopLabel.Text = $"Male Mosquito Population: {simulationState.maleMosquitoPop}";
 		FemaleMosquitoPopLabel.Text = $"Female Mosquito Population: {simulationState.femaleMosquitoPop}";
 		MosquitoLarvePopLabel.Text = $"Mosquito Larve Population: {simulationState.mosqutioLarvaePop}";
+	}
+
+	public void onGDButtonPressed()
+	{
+		main.MainWorld.simulationHandler.addPopulation(new geneDriveMosquitoes(100, ref main.MainWorld.environment, main));
 	}
 }

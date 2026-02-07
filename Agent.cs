@@ -116,8 +116,11 @@ public abstract class Agent
 
     public void death()
     {
-        agentActive = false;
-        intents.Add(new deactivateIntent(this,this));
+        if(agentActive)
+        {
+            agentActive = false;
+            intents.Add(new deactivateIntent(this,this));
+        }
     }
     public virtual Agent[] GetAgentsToSpawn()
     {
@@ -268,7 +271,7 @@ public abstract class Agent
                 case 10:
                     //select breeding site
                     fertilised = true;
-                    breedingTimer = 1440 * 3; //takes 3 days for eggs to mature to be hatched
+                    breedingTimer = 1440 * 1; //takes 3 days for eggs to mature to be hatched
                     updateTargetAgent(selectClosestFromList(environment.world.populations[2].agents.ToList()));
                     updateAiState(11);
                     break;
@@ -379,7 +382,7 @@ public abstract class Agent
                 MosqutioAIstate = 0;
                 agentActive = false;
             }
-            if(GD.Randf() < 0.00021)
+            else if(GD.Randf() < 0.00021)
             {
                 death();
             }
@@ -657,7 +660,7 @@ public class mosqutioLarvae : Agent
     Agent agentToHatch;
     public mosqutioLarvae(Vector2 startpos, ref Environment environment, int index, Agent agentToHatch) : base(startpos, ref environment, index)
     {
-        timeToHatch = 14400;
+        timeToHatch = 1440;
         this.agentToHatch = agentToHatch;
     }
     public override void updateColor()

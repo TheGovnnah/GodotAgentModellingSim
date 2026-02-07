@@ -31,6 +31,7 @@ public class HumanPopulation : Population
     Map spawnMap;
     public HumanPopulation(int popSize, ref Environment environment, Node2D parent, ref Map spawnMap) : base(popSize, ref environment, parent)
     { 
+        if(popSize >= 2000){
         this.spawnMap = spawnMap;
         int count = 0;
         for(int i =0; i < 100; i++)
@@ -47,7 +48,9 @@ public class HumanPopulation : Population
                 }
             }
         }
-        /*if(popSize >= 100){
+        }
+        else{
+        if(popSize >= 100){
         for(int j = 0; j < 100; j++)
         {
             Vector2 clusterPos = new Vector2(GD.Randf() * (environment.width- environment.cellSize), GD.Randf() * (environment.width - environment.cellSize));
@@ -67,6 +70,7 @@ public class HumanPopulation : Population
                 Vector2 startPos = new Vector2(GD.Randf() * environment.height, GD.Randf()* environment.width);
                 agents[i] = new Human(startPos, ref environment, i);
             }
+        }
         }
         //agents[0].infected = true; // Infect first human for testing*/
     }
