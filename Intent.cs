@@ -269,6 +269,10 @@ public class deactivateResolver : IntentResolver<deactivateIntent>
         foreach(var intent in intents)
         {
             intent.AgentToDeactivate.agentActive = false;
+            if(intent.AgentToDeactivate.targetAgent != null)
+            {
+                intent.AgentToDeactivate.targetAgent.targeted = false;
+            }
             simulation.removeAgent(intent.AgentToDeactivate.index);
         }
     }

@@ -35,7 +35,7 @@ public class SimulationState
             if(agent is MaleMosquito) maleMosquitoPop ++;
             else femaleMosquitoPop++;
         }
-        else if(agent is mosqutioLarve) mosqutioLarvaePop ++;
+        else if(agent is mosqutioLarvae) mosqutioLarvaePop ++;
         else if (agent is breedingSite) breedingSites++;
     }
     public void OnAgentRemoved(Agent agent)
@@ -56,8 +56,9 @@ public class SimulationState
                 if(agent.infected) infectedMosqutioPop--;
             }
         }
-        else if(agent is mosqutioLarve) mosqutioLarvaePop --;
+        else if(agent is mosqutioLarvae) mosqutioLarvaePop --;
         else if (agent is breedingSite) breedingSites--;
+
 
         
     }

@@ -31,7 +31,7 @@ public abstract class Agent
     public ConcurrentBag<IIntent> intents;
     public virtual void updateAiState(int newState, Agent agent){}
     public virtual void updateAiState(int newState){}
-    public virtual void AccessAIState(int newState){  }
+    public virtual void AccessAIState(int newState){}
 	public Agent(Vector2 startPos, ref Environment environment, int index)
 	{
         this.index = index;
@@ -152,17 +152,9 @@ public abstract class Agent
         }
         public override void calculateAIStep()
         {
-            calculateCellIndex();
+            base.calculateAIStep();
             //Mosquito specific AI step calculations
-            lifespan--;
             breedingTimer--;
-            if (lifespan <= 0)
-            {
-                death();
-                MosqutioAIstate = 0;
-                agentActive = false;
-            }
-
             switch (MosqutioAIstate)
             {
                 case 0:
@@ -291,14 +283,7 @@ public abstract class Agent
                 break;
                 case 12:
                     //lay eggs
-                    if(breedingTimer<= 0){
-                    for(int i = 0; i < 1; i++)
-                    {
-                        Vector2 eggPos = position;
-                        intents.Add(new AddIntent(this,new mosqutioLarve(eggPos, ref environment,0)));
-                    }
-                    updateAiState(7);
-                    }
+                    layEggs();
                     break;
             }
             
@@ -316,6 +301,35 @@ public abstract class Agent
                 //GD.Print("mosquito stuck");
             }
         }
+        private void layEggs()
+        {
+            if(breedingTimer<= 0)
+            {
+                Mosquito agentToHatch;
+                if(genotype != 0)
+                {
+                    agentToHatch = new MaleMosquito(position, ref environment, 0);
+                    agentToHatch.genotype = genotype;
+                }
+                else
+                {
+                    if(GD.Randf() > 0.5)
+                    {
+                        agentToHatch = new MaleMosquito(position, ref environment, 0);
+                    }
+                    else
+                    {
+                        agentToHatch = new femaleMosquito(position, ref environment, 0);
+                    }
+                }
+                for(int i = 0; i < 6; i++)
+                {
+                    Vector2 eggPos = position;
+                    intents.Add(new AddIntent(this,new mosqutioLarvae(eggPos, ref environment,0,agentToHatch)));
+                }
+                updateAiState(7);
+            }
+        }
     }
 	public class Mosquito : Agent
 	{
@@ -324,6 +338,7 @@ public abstract class Agent
 		protected int MosqutioAIstate = 4;
         protected int previousAIstate = 4;
         protected bool fertilised = false;
+        public int genotype = 00;
         protected int lifespan = 1440 * 152;//lifespan in minutes (1 day) * 152 days average lifespan
 		public Mosquito(Vector2 startPos, ref Environment environment, int index) : base(startPos, ref environment, index)
 		{
@@ -364,6 +379,11 @@ public abstract class Agent
                 MosqutioAIstate = 0;
                 agentActive = false;
             }
+            if(GD.Randf() < 0.00021)
+            {
+                death();
+            }
+
         }
         //Returns the closest agent of the specified type within the current cell, null if none found
         public Agent selectTargetAgent(Type agentType)
@@ -566,15 +586,10 @@ public class MaleMosquito : Mosquito
     public override void updateColor()
     {
         color = new Color(0.5f, 0.5f, 0.5f); //
-
     }
     public override void calculateAIStep()
     {
-        lifespan--;
-        if (lifespan <= 0)
-        {
-            death();
-        }
+        base.calculateAIStep();
 
         switch (MosqutioAIstate)
         {
@@ -594,6 +609,10 @@ public class MaleMosquito : Mosquito
                     //select a random movement target near breeding site
                     float targetCellX = breedingSiteTarget.X + (GD.Randf() - 0.5f) * 1000;
                     float targetCellY = breedingSiteTarget.Y + (GD.Randf() - 0.5f) * 1000;
+                    if(targetCellX >= environment.height || targetCellY >= environment.width || targetCellX <= 0 || targetCellY <= 0)
+                    {
+                        break;
+                    }
                     updateMovementTarget(new Vector2(targetCellX, targetCellY));
                     updateAiState(4);
                 }
@@ -632,13 +651,14 @@ public class MaleMosquito : Mosquito
     }
 }
 
-public class mosqutioLarve : Agent
+public class mosqutioLarvae : Agent
 {
     int timeToHatch;
-
-    public mosqutioLarve(Vector2 startpos, ref Environment environment, int index) : base(startpos, ref environment, index)
+    Agent agentToHatch;
+    public mosqutioLarvae(Vector2 startpos, ref Environment environment, int index, Agent agentToHatch) : base(startpos, ref environment, index)
     {
         timeToHatch = 14400;
+        this.agentToHatch = agentToHatch;
     }
     public override void updateColor()
     {
@@ -649,15 +669,7 @@ public class mosqutioLarve : Agent
         timeToHatch--;
         if(timeToHatch <= 0)
         {
-            Vector2 eggPos = position;
-            if(GD.Randf() < 0.5f)
-            {
-                intents.Add(new AddIntent(this,new femaleMosquito(eggPos, ref environment,0)));
-            }
-            else
-            {
-                intents.Add(new AddIntent(this,new MaleMosquito(eggPos, ref environment,0)));
-            }
+            intents.Add(new AddIntent(this, agentToHatch));
             death();
         }
     }

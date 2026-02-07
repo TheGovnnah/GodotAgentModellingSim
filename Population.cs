@@ -17,9 +17,7 @@ public abstract class Population
     //Population Data
     protected int populationSize { get;set; }
     public Agent[] agents { get;set; }
-    protected MultiMeshinst multimesh { get; }
     protected Environment environment;
-
     public Population(int popSize, ref Environment environment, Node2D parent)
     {
         populationSize = popSize;
@@ -103,6 +101,29 @@ public class breedingSites : Population
         {
             Vector2 startPos = new Vector2(GD.Randf() * environment.width, GD.Randf() * environment.height);
             agents[i] = new breedingSite(startPos, ref environment,i);
+        }
+    }
+}
+
+public class geneDriveMosquitoes : Population
+{
+    public geneDriveMosquitoes(int popSize, ref Environment environment, Node2D parent) : base(popSize, ref environment, parent)
+    {
+        for (int i = 0; i < popSize; i++)
+        {
+            Mosquito mosquitoAdded;
+            Vector2 startPos = new Vector2(GD.Randf() * environment.width, GD.Randf()* environment.height);
+            if(GD.Randf() < 0.5f)
+            {
+                mosquitoAdded = new femaleMosquito(startPos, ref environment,i);
+            }
+            else
+            {
+                mosquitoAdded = new MaleMosquito(startPos, ref environment,i);
+            }
+            mosquitoAdded.genotype = 10;
+            agents[i] = mosquitoAdded;
+            
         }
     }
 }

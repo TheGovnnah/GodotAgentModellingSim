@@ -41,16 +41,3 @@ public struct DjikstraMap
         }
     }
 }
-
-public struct AiUpdate
-{
-	public Vector2 position;
-	public Cell currentCell;
-    public CellUpdate? cellUpdate;
-    public AiUpdate(int index, Vector2 position, bool infected, Cell currentCell, Color color, bool agentActive, CellUpdate? cellUpdate, Agent[] spawnAgents)
-    {
-        this.position = position;
-        this.currentCell = currentCell;
-        this.cellUpdate = cellUpdate;
-    }
-}

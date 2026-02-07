@@ -14,7 +14,6 @@ public class Environment
 
     public DjikstraMap HumanDijkstraMap;
 
-    public DjikstraMap MaleMosquitoDijkstraMap;
     public int cellsPerRow;
     public Environment(int width, int height, int cellSize, World world)
     {

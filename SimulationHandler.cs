@@ -25,7 +25,6 @@ public class SimulationHandler
 
     //multithreading variables
     protected Task aiComputeTask;
-    protected AiUpdate[] aiUpdates;
     private bool useBufferA = true;
     Vector2[] sourcePositions;
     Color[] sourceColors;
@@ -53,7 +52,6 @@ public class SimulationHandler
         colorsA = new Color[cacheSize];
         positionsB = new Vector2[cacheSize];
         colorsB = new Color[cacheSize];
-        aiUpdates = new AiUpdate[cacheSize];
         intentsByType = new ConcurrentDictionary<Type, ConcurrentBag<IIntent>>();
 
         //initialise the free space stack
@@ -154,15 +152,12 @@ public class SimulationHandler
         environment.world.simulationState.resetCounters();
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
-        if(intentsByType.TryGetValue(intentResolvers[0].IntentType, out var intents))
-        intentResolvers[0].GenericResolve(intents,environment.world);
-        Parallel.ForEach(intentResolvers, intentResolver =>
+
+        foreach(var intentResolver in intentResolvers)
         {
-            if(!(intentResolver is addAgentResolver))
             if(intentsByType.TryGetValue(intentResolver.IntentType, out var intents))
             intentResolver.GenericResolve(intents, environment.world);
-        });
-        //GD.Print($"Apllying frame took {stopwatch.Elapsed} s to complete");
+        }
         stopwatch.Stop();
     }
 
@@ -175,6 +170,15 @@ public class SimulationHandler
         }
         GD.Print("Simulation starting...");
         schedulePopulationAIsteps();
+    }
+
+    public void addPopulation(Population population)
+    {
+        foreach(Agent agent in population.agents)
+        {
+            IIntent intent = new AddIntent(agent, agent);
+            intentsByType.AddOrUpdate(intent.GetType(), new ConcurrentBag<IIntent>{intent},(_, bag) => { bag.Add(intent); return bag; });
+        }
     }
 
 }

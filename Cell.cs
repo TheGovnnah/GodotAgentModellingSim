@@ -6,7 +6,7 @@ using Godot;
 
 public class Cell
 {
-	public int index; 
+
 	public int generation = 0;
 	public float cellsize = 60;
 	//population in cell data
@@ -126,10 +126,7 @@ public class Cell
 					humanPopulation--;
 				}
 			}
-			if(agentsInCell.Count < subThreshold)
-			{
-				disableSubcells();
-			}
+			
 		}
 		else
 		{
@@ -147,6 +144,10 @@ public class Cell
 				{
 					humanPopulation--;
 				}
+				if(totalPopulation + 10 < subThreshold)
+				{
+					disableSubcells();
+				}
 			}
 		}
 		return agentRemoved;
@@ -154,10 +155,8 @@ public class Cell
 
 	public void enableSubcells()
 	{
-		if (!subcellsUsed && generation <= 40)
+		if (!subcellsUsed && generation < 40)
 		{
-			int sumAgentsInCell = agentsInCell.Count;
-			
 
 			subcellsUsed = true;
 			for (int i = 0; i < 10; i++)
@@ -212,6 +211,30 @@ public class Cell
 			int subcellX = (int)Math.Truncate((position.X % cellsize) /subcellSize);
 			int subcellY = (int)Math.Truncate((position.Y % cellsize) /subcellSize);
 			return subCells[subcellX,subcellY].CalculateSubcell(position);
+		}
+	}
+
+	public int returnCount(Type type)
+	{
+		if(type == typeof(Agent))
+		{
+			return totalPopulation;
+		}
+		else if(type == typeof(MaleMosquito))
+		{
+			return MaleMosquitoPopulation;
+		}
+		else if(type == typeof(femaleMosquito))
+		{
+			return FemaleMosquitoPopulation;
+		}
+		else if(type == typeof(Human))
+		{
+			return humanPopulation;
+		}
+		else
+		{
+			return 0;
 		}
 	}
 
