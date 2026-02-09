@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3 uid="uid://wdm6g07r5t8j"]
 
 [ext_resource type="Script" uid="uid://h04bmfpjadny" path="res://Main.cs" id="1_ig7tw"]
-[ext_resource type="Script" uid="uid://c0xlkqlbqqsvd" path="res://Camera2d.cs" id="2_0xm2m"]
-[ext_resource type="Script" uid="uid://wb48ua0mfvbs" path="res://Hud.cs" id="3_1bvp3"]
+[ext_resource type="Script" path="res://Camera2d.cs" id="2_0xm2m"]
+[ext_resource type="Script" path="res://Hud.cs" id="3_1bvp3"]
 [ext_resource type="Script" uid="uid://b14xyhl7m3b5u" path="res://StatsContainer.cs" id="4_lquwl"]
 [ext_resource type="Texture2D" uid="uid://ygq2dr5neics" path="res://icon.svg" id="6_7mycd"]
 
@@ -52,6 +52,10 @@ layout_mode = 2
 
 [node name="MosquitoLarvePop" type="Label" parent="UI/HUD/StatsContainer"]
 layout_mode = 2
+
+[node name="SpawnGDButton" type="Button" parent="UI/HUD/StatsContainer"]
+layout_mode = 2
+text = "Spawn gene-drive affected mosquitoes"
 
 [node name="GraphContainer" type="GridContainer" parent="UI/HUD"]
 layout_mode = 1
