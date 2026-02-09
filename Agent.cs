@@ -298,7 +298,7 @@ public abstract class Agent
                     for(int i = 0; i < 1; i++)
                     {
                         Vector2 eggPos = position;
-                        intents.Add(new AddIntent(this,new mosqutioLarve(eggPos, ref environment,0)));
+                        intents.Add(new AddIntent(this,new mosqutioLarvae(eggPos, ref environment,0)));
                     }
                     updateAiState(7);
                     }
@@ -642,11 +642,11 @@ public class MaleMosquito : Mosquito
     }
 }
 
-public class mosqutioLarve : Agent
+public class mosqutioLarvae : Agent
 {
     int timeToHatch;
 
-    public mosqutioLarve(Vector2 startpos, ref Environment environment, int index) : base(startpos, ref environment, index)
+    public mosqutioLarvae(Vector2 startpos, ref Environment environment, int index) : base(startpos, ref environment, index)
     {
         timeToHatch = 14400;
     }
