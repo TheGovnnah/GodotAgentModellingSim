@@ -74,14 +74,7 @@ public class HumanPopulation : Population
                 }
             }
         }
-        foreach(Agent agent in agents)
-        {
-            if(agent.GetType() == typeof(femaleMosquito))
-            {
-                agent.infected= true;
-                break;
-            }
-        }
+
     }
 }
 
@@ -102,7 +95,15 @@ public class MosquitoPopulation : Population
                 agents[i] = new MaleMosquito(startPos, ref environment,i);
             }
         }
-        agents[0].infected = true;
+        foreach(Agent agent in agents)
+        {
+            if(agent.GetType() == typeof(femaleMosquito))
+            {
+                agent.infected= true;
+                environment.world.simulationState.OnInfectionChange(agent);
+                break;
+            }
+        }
     }
 }
 
