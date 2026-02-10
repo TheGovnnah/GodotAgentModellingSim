@@ -21,19 +21,19 @@ public class StatsPlotter
     public TextureRect actionOutputTexture;
     DuckDBConnection duckDBConnection;
     DuckDBCommand command;
-    public List<int> tick= new List<int>();
-    public List<int> totalPop= new List<int>();
-    public List<int> humanPop= new List<int>();
-    public List<int> mosquitoPop= new List<int>();
-    public List<int> maleMosquitoPop= new List<int>();
-    public List<int> femaleMosquitoPop= new List<int>();
-    public List<int> mosqutioLarvaePop= new List<int>();
-    public List<int> breedingSites= new List<int>();
-    public List<int> infectedHumanPop= new List<int>();
-    public List<int> infectedMosqutioPop= new List<int>();
-    public List<int> infectedThisTick= new List<int>();
-    public List<int> movesThisTick= new List<int>();
-    public List<int> BitesThisTick= new List<int>();
+    public List<int> tick = new List<int>(10);
+    public List<int> totalPop = new List<int>(10);
+    public List<int> humanPop = new List<int>(10);
+    public List<int> mosquitoPop = new List<int>(10);
+    public List<int> maleMosquitoPop = new List<int>(10);
+    public List<int> femaleMosquitoPop = new List<int>(10);
+    public List<int> mosqutioLarvaePop = new List<int>(10);
+    public List<int> breedingSites = new List<int>(10);
+    public List<int> infectedHumanPop = new List<int>(10);
+    public List<int> infectedMosqutioPop = new List<int>(10);
+    public List<int> infectedThisTick = new List<int>(10);
+    public List<int> movesThisTick = new List<int>(10);
+    public List<int> BitesThisTick = new List<int>(10);
 
     public SignalXY totalPopSignal;
     public SignalXY humanPopSignal;
@@ -47,7 +47,7 @@ public class StatsPlotter
     public SignalXY infectedThisTickSignal;
     public SignalXY movesThisTickSignal;
     public SignalXY BitesThisTickSignal;
-    
+
 
     public StatsPlotter(Node node)
     {
@@ -66,20 +66,20 @@ public class StatsPlotter
         duckDBConnection.Open();
         command = duckDBConnection.CreateCommand();
 
-        totalPopSignal = populationGraph.Add.SignalXY(tick,totalPop);
-        humanPopSignal = populationGraph.Add.SignalXY(tick,humanPop);
-        mosquitoPopSignal = populationGraph.Add.SignalXY(tick,mosquitoPop);
-        maleMosquitoPopSignal = populationGraph.Add.SignalXY(tick,maleMosquitoPop);
-        femaleMosquitoPopSignal = populationGraph.Add.SignalXY(tick,femaleMosquitoPop);
-        mosqutioLarvaePopSignal = populationGraph.Add.SignalXY(tick,mosqutioLarvaePop);
-        breedingSitesSignal = populationGraph.Add.SignalXY(tick,breedingSites);
+        totalPopSignal = populationGraph.Add.SignalXY(tick, totalPop);
+        humanPopSignal = populationGraph.Add.SignalXY(tick, humanPop);
+        mosquitoPopSignal = populationGraph.Add.SignalXY(tick, mosquitoPop);
+        maleMosquitoPopSignal = populationGraph.Add.SignalXY(tick, maleMosquitoPop);
+        femaleMosquitoPopSignal = populationGraph.Add.SignalXY(tick, femaleMosquitoPop);
+        mosqutioLarvaePopSignal = populationGraph.Add.SignalXY(tick, mosqutioLarvaePop);
+        breedingSitesSignal = populationGraph.Add.SignalXY(tick, breedingSites);
 
-        infectedHumanPopSignal = infectionGraph.Add.SignalXY(tick,infectedHumanPop);
-        infectedMosqutioPopSignal = infectionGraph.Add.SignalXY(tick,infectedMosqutioPop);
-        infectedThisTickSignal = infectionGraph.Add.SignalXY(tick,infectedThisTick);
+        infectedHumanPopSignal = infectionGraph.Add.SignalXY(tick, infectedHumanPop);
+        infectedMosqutioPopSignal = infectionGraph.Add.SignalXY(tick, infectedMosqutioPop);
+        infectedThisTickSignal = infectionGraph.Add.SignalXY(tick, infectedThisTick);
 
-        movesThisTickSignal = actionsGraph.Add.SignalXY(tick,movesThisTick);
-        BitesThisTickSignal = actionsGraph.Add.SignalXY(tick,BitesThisTick);
+        movesThisTickSignal = actionsGraph.Add.SignalXY(tick, movesThisTick);
+        BitesThisTickSignal = actionsGraph.Add.SignalXY(tick, BitesThisTick);
 
         totalPopSignal.LegendText = "Total Population";
         humanPopSignal.LegendText = "Humans";
@@ -99,9 +99,9 @@ public class StatsPlotter
 
     public void updateGraph()
     {
-        outputImageHeight = (int) popOutputTexture.GetRect().Size.Y;
-        outputImageWidth = (int) popOutputTexture.GetRect().Size.X;
-        if(tick.Count != 0)
+        outputImageHeight = (int)popOutputTexture.GetRect().Size.Y;
+        outputImageWidth = (int)popOutputTexture.GetRect().Size.X;
+        if (tick.Count != 0)
         {
             int currentTick = tick[tick.Last()];
             string CommandText = $"SELECT * FROM simulation WHERE tick > {currentTick}";
@@ -111,7 +111,7 @@ public class StatsPlotter
         else
         {
             string CommandText = "SELECT * FROM simulation";
-            command.CommandText =CommandText;
+            command.CommandText = CommandText;
             writeIntoArrays(command.ExecuteReader());
         }
     }
@@ -121,59 +121,59 @@ public class StatsPlotter
         while (reader.Read())
         {
             int readTick = reader.GetInt32(0);
-            tick.Insert(readTick,readTick);
-            totalPop.Insert(readTick,reader.GetInt32(1));
-            humanPop.Insert(readTick,reader.GetInt32(2));
-            mosquitoPop.Insert(readTick,reader.GetInt32(3));
-            maleMosquitoPop.Insert(readTick,reader.GetInt32(4));
-            femaleMosquitoPop.Insert(readTick,reader.GetInt32(5));
-            mosqutioLarvaePop.Insert(readTick,reader.GetInt32(6));
-            breedingSites.Insert(readTick,reader.GetInt32(7));
-            infectedHumanPop.Insert(readTick,reader.GetInt32(8));
-            infectedMosqutioPop.Insert(readTick,reader.GetInt32(9));
-            infectedThisTick.Insert(readTick,reader.GetInt32(10));
-            movesThisTick.Insert(readTick,reader.GetInt32(11));
-            BitesThisTick.Insert(readTick,reader.GetInt32(12));
+            tick.Insert(readTick, readTick);
+            totalPop.Insert(readTick, reader.GetInt32(1));
+            humanPop.Insert(readTick, reader.GetInt32(2));
+            mosquitoPop.Insert(readTick, reader.GetInt32(3));
+            maleMosquitoPop.Insert(readTick, reader.GetInt32(4));
+            femaleMosquitoPop.Insert(readTick, reader.GetInt32(5));
+            mosqutioLarvaePop.Insert(readTick, reader.GetInt32(6));
+            breedingSites.Insert(readTick, reader.GetInt32(7));
+            infectedHumanPop.Insert(readTick, reader.GetInt32(8));
+            infectedMosqutioPop.Insert(readTick, reader.GetInt32(9));
+            infectedThisTick.Insert(readTick, reader.GetInt32(10));
+            movesThisTick.Insert(readTick, reader.GetInt32(11));
+            BitesThisTick.Insert(readTick, reader.GetInt32(12));
         }
     }
 
     public void writeIntoArraysSystem(SimulationState simulationState)
     {
         int readTick = simulationState.tick;
-        tick.Insert(readTick,readTick);
-        totalPop.Insert(readTick,simulationState.totalPop);
-        humanPop.Insert(readTick,simulationState.humanPop);
-        mosquitoPop.Insert(readTick,simulationState.mosquitoPop);
-        maleMosquitoPop.Insert(readTick,simulationState.maleMosquitoPop);
-        femaleMosquitoPop.Insert(readTick,simulationState.femaleMosquitoPop);
-        mosqutioLarvaePop.Insert(readTick,simulationState.mosqutioLarvaePop);
-        breedingSites.Insert(readTick,simulationState.breedingSites);
-        infectedHumanPop.Insert(readTick,simulationState.infectedHumanPop);
-        infectedMosqutioPop.Insert(readTick,simulationState.infectedMosqutioPop);
-        infectedThisTick.Insert(readTick,simulationState.infectedThisTick);
-        movesThisTick.Insert(readTick,simulationState.movesThisTick);
-        BitesThisTick.Insert(readTick,simulationState.BitesThisTick);
+        tick.Insert(readTick, readTick);
+        totalPop.Insert(readTick, simulationState.totalPop);
+        humanPop.Insert(readTick, simulationState.humanPop);
+        mosquitoPop.Insert(readTick, simulationState.mosquitoPop);
+        maleMosquitoPop.Insert(readTick, simulationState.maleMosquitoPop);
+        femaleMosquitoPop.Insert(readTick, simulationState.femaleMosquitoPop);
+        mosqutioLarvaePop.Insert(readTick, simulationState.mosqutioLarvaePop);
+        breedingSites.Insert(readTick, simulationState.breedingSites);
+        infectedHumanPop.Insert(readTick, simulationState.infectedHumanPop);
+        infectedMosqutioPop.Insert(readTick, simulationState.infectedMosqutioPop);
+        infectedThisTick.Insert(readTick, simulationState.infectedThisTick);
+        movesThisTick.Insert(readTick, simulationState.movesThisTick);
+        BitesThisTick.Insert(readTick, simulationState.BitesThisTick);
     }
 
     public void renderGraph()
     {
-        var gdImage  = new Godot.Image();
+        var gdImage = new Godot.Image();
         byte[] buffer;
 
         populationGraph.Axes.AutoScale();
-        var img = populationGraph.GetImage(outputImageWidth,outputImageHeight);
+        var img = populationGraph.GetImage(outputImageWidth, outputImageHeight);
         buffer = img.GetImageBytes();
         gdImage.LoadPngFromBuffer(buffer);
         popOutputTexture.Texture = ImageTexture.CreateFromImage(gdImage);
 
         infectionGraph.Axes.AutoScale();
-        img = infectionGraph.GetImage(outputImageWidth,outputImageHeight);
+        img = infectionGraph.GetImage(outputImageWidth, outputImageHeight);
         buffer = img.GetImageBytes();
         gdImage.LoadPngFromBuffer(buffer);
         infectionOutputTexture.Texture = ImageTexture.CreateFromImage(gdImage);
 
         actionsGraph.Axes.AutoScale();
-        img = actionsGraph.GetImage(outputImageWidth,outputImageHeight);
+        img = actionsGraph.GetImage(outputImageWidth, outputImageHeight);
         buffer = img.GetImageBytes();
         gdImage.LoadPngFromBuffer(buffer);
         actionOutputTexture.Texture = ImageTexture.CreateFromImage(gdImage);

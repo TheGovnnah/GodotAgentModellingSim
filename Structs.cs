@@ -2,7 +2,7 @@ using System;
 using Godot;
 public struct CellUpdate
 {
-    
+
     public Cell oldCell;
     public Cell newCell;
     public Agent agent;

@@ -2,7 +2,7 @@ public class SimulationState
 {
     //stores the current state of the simulation
     public int tick;
-    
+
     public int totalPop;
     public int humanPop;
     public int mosquitoPop;
@@ -27,55 +27,55 @@ public class SimulationState
 
     public void OnAgentAdded(Agent agent)
     {
-        totalPop ++;
-        if(agent is Human) humanPop ++;
-        else if(agent is Mosquito)
+        totalPop++;
+        if (agent is Human) humanPop++;
+        else if (agent is Mosquito)
         {
             mosquitoPop++;
-            if(agent is MaleMosquito) maleMosquitoPop ++;
+            if (agent is MaleMosquito) maleMosquitoPop++;
             else femaleMosquitoPop++;
         }
-        else if(agent is mosqutioLarvae) mosqutioLarvaePop ++;
+        else if (agent is mosqutioLarvae) mosqutioLarvaePop++;
         else if (agent is breedingSite) breedingSites++;
     }
     public void OnAgentRemoved(Agent agent)
     {
-        totalPop --;
-        if(agent is Human)
+        totalPop--;
+        if (agent is Human)
         {
-            humanPop --;
-            if(agent.infected) infectedHumanPop--;
-        }     
-        else if(agent is Mosquito)
+            humanPop--;
+            if (agent.infected) infectedHumanPop--;
+        }
+        else if (agent is Mosquito)
         {
             mosquitoPop--;
-            if(agent is MaleMosquito) maleMosquitoPop --;
+            if (agent is MaleMosquito) maleMosquitoPop--;
             else
             {
                 femaleMosquitoPop--;
-                if(agent.infected) infectedMosqutioPop--;
+                if (agent.infected) infectedMosqutioPop--;
             }
         }
-        else if(agent is mosqutioLarvae) mosqutioLarvaePop --;
+        else if (agent is mosqutioLarvae) mosqutioLarvaePop--;
         else if (agent is breedingSite) breedingSites--;
 
 
-        
+
     }
 
     public void OnInfectionChange(Agent agent)
     {
-        if(agent is Human)
+        if (agent is Human)
         {
-            infectedHumanPop += agent.infected ? 1:-1;
+            infectedHumanPop += agent.infected ? 1 : -1;
         }
-        if(agent is Mosquito)
+        if (agent is Mosquito)
         {
-            infectedMosqutioPop += agent.infected ? 1:-1;
+            infectedMosqutioPop += agent.infected ? 1 : -1;
         }
         if (agent.infected)
         {
-            infectedThisTick ++;
+            infectedThisTick++;
         }
     }
 

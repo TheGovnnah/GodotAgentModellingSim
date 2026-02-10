@@ -19,19 +19,19 @@ public class Cell
 	public int subThreshold = 50;
 	public HashSet<Agent> agentsInCell = new();
 	public int X, Y;
-	public Cell[,] subCells = new Cell[10,10]; 
+	public Cell[,] subCells = new Cell[10, 10];
 	public Cell(int xIndex, int yIndex)
 	{
 		X = xIndex;
 		Y = yIndex;
-		subcellSize = cellsize/10;
+		subcellSize = cellsize / 10;
 	}
 	public Cell(int xIndex, int yIndex, float cellsize)
 	{
 		X = xIndex;
 		Y = yIndex;
 		this.cellsize = cellsize;
-		subcellSize = cellsize/10;
+		subcellSize = cellsize / 10;
 	}
 	private Cell(int xIndex, int yIndex, float cellsize, int previousGeneration)
 	{
@@ -39,22 +39,22 @@ public class Cell
 
 		Y = yIndex;
 		this.cellsize = cellsize;
-		subcellSize = cellsize/10;
-		generation = previousGeneration +1;
+		subcellSize = cellsize / 10;
+		generation = previousGeneration + 1;
 	}
 
 	public HashSet<Agent> GetAgentsInCell(ref Vector2 position)
 	{
-        if (!subcellsUsed)
-        {
-            return agentsInCell;
+		if (!subcellsUsed)
+		{
+			return agentsInCell;
 		}
 		else
 		{
-			int subcellX = (int)Math.Truncate((position.X % cellsize) /subcellSize);
-			int subcellY = (int)Math.Truncate((position.Y % cellsize) /subcellSize);
+			int subcellX = (int)Math.Truncate((position.X % cellsize) / subcellSize);
+			int subcellY = (int)Math.Truncate((position.Y % cellsize) / subcellSize);
 			return subCells[subcellX, subcellY].GetAgentsInCell(ref position);
-        }
+		}
 	}
 	public HashSet<Agent> GetAllAgentsInCell()
 	{
@@ -79,34 +79,34 @@ public class Cell
 	{
 		if (agentsInCell.Contains(agent))
 		{
-    		//GD.Print($"Warning: agent {agent.index} already exists in {X},{Y}, generation={generation}");
+			//GD.Print($"Warning: agent {agent.index} already exists in {X},{Y}, generation={generation}");
 			return;
 		}
 		totalPopulation++;
-		if(agent.GetType() == typeof(MaleMosquito))
-            {
-				MaleMosquitoPopulation++;
-            }
-		else if(agent.GetType() == typeof(Human))
+		if (agent.GetType() == typeof(MaleMosquito))
+		{
+			MaleMosquitoPopulation++;
+		}
+		else if (agent.GetType() == typeof(Human))
 		{
 			humanPopulation++;
 		}
 		if (!subcellsUsed)
 		{
 			agentsInCell.Add(agent);
-			if(agentsInCell.Count >= subThreshold)
+			if (agentsInCell.Count >= subThreshold)
 			{
 				enableSubcells();
 			}
 		}
 		else
 		{
-			int subcellX = (int)Math.Truncate((agent.position.X % cellsize) /subcellSize);
-			int subcellY = (int)Math.Truncate((agent.position.Y % cellsize) /subcellSize);
+			int subcellX = (int)Math.Truncate((agent.position.X % cellsize) / subcellSize);
+			int subcellY = (int)Math.Truncate((agent.position.Y % cellsize) / subcellSize);
 			subCells[subcellX, subcellY].addAgentToCell(agent);
 		}
-		
-		
+
+
 	}
 	public bool removeAgentFromCell(Agent agent)
 	{
@@ -117,34 +117,34 @@ public class Cell
 			{
 				agentRemoved = true;
 				totalPopulation--;
-				if(agent.GetType() == typeof(MaleMosquito))
-					{
-						MaleMosquitoPopulation--;
-					}
-				else if(agent.GetType() == typeof(Human))
+				if (agent.GetType() == typeof(MaleMosquito))
+				{
+					MaleMosquitoPopulation--;
+				}
+				else if (agent.GetType() == typeof(Human))
 				{
 					humanPopulation--;
 				}
 			}
-			
+
 		}
 		else
 		{
-			int subcellX = (int)Math.Truncate((agent.position.X % cellsize) /subcellSize);
-			int subcellY = (int)Math.Truncate((agent.position.Y % cellsize) /subcellSize);
-			if(subCells[subcellX, subcellY].removeAgentFromCell(agent))
+			int subcellX = (int)Math.Truncate((agent.position.X % cellsize) / subcellSize);
+			int subcellY = (int)Math.Truncate((agent.position.Y % cellsize) / subcellSize);
+			if (subCells[subcellX, subcellY].removeAgentFromCell(agent))
 			{
 				agentRemoved = true;
 				totalPopulation--;
-				if(agent.GetType() == typeof(MaleMosquito))
-					{
-						MaleMosquitoPopulation--;
-					}
-				else if(agent.GetType() == typeof(Human))
+				if (agent.GetType() == typeof(MaleMosquito))
+				{
+					MaleMosquitoPopulation--;
+				}
+				else if (agent.GetType() == typeof(Human))
 				{
 					humanPopulation--;
 				}
-				if(totalPopulation + 10 < subThreshold)
+				if (totalPopulation + 10 < subThreshold)
 				{
 					disableSubcells();
 				}
@@ -163,30 +163,30 @@ public class Cell
 			{
 				for (int j = 0; j < 10; j++)
 				{
-					subCells[i, j] = new Cell(i,j, subcellSize,generation);
+					subCells[i, j] = new Cell(i, j, subcellSize, generation);
 				}
 			}
 			foreach (var agent in agentsInCell)
 			{
-				int subcellX = (int)Math.Truncate((agent.position.X % cellsize) /subcellSize);
-				int subcellY = (int)Math.Truncate((agent.position.Y % cellsize) /subcellSize);
+				int subcellX = (int)Math.Truncate((agent.position.X % cellsize) / subcellSize);
+				int subcellY = (int)Math.Truncate((agent.position.Y % cellsize) / subcellSize);
 				subCells[subcellX, subcellY].addAgentToCell(agent);
 
 			}
 			agentsInCell.Clear();
-			GD.Print($"generation {generation+1} subcells enabled at {X},{Y}, with total population of {totalPopulation}, agents in cell: {agentsInCell.Count}");
+			GD.Print($"generation {generation + 1} subcells enabled at {X},{Y}, with total population of {totalPopulation}, agents in cell: {agentsInCell.Count}");
 		}
 	}
 	public void disableSubcells()
-    {
-        if (subcellsUsed)
-        {
-            subcellsUsed = false;
+	{
+		if (subcellsUsed)
+		{
+			subcellsUsed = false;
 			agentsInCell = GetAllAgentsInCell();
-			subCells = new Cell[10,10];
+			subCells = new Cell[10, 10];
 			GD.Print($"subcells disabled at {X},{Y}");
-        }
-    }
+		}
+	}
 
 	public bool checkCellForAgents(Type agentType)
 	{
@@ -208,27 +208,27 @@ public class Cell
 		}
 		else
 		{
-			int subcellX = (int)Math.Truncate((position.X % cellsize) /subcellSize);
-			int subcellY = (int)Math.Truncate((position.Y % cellsize) /subcellSize);
-			return subCells[subcellX,subcellY].CalculateSubcell(position);
+			int subcellX = (int)Math.Truncate((position.X % cellsize) / subcellSize);
+			int subcellY = (int)Math.Truncate((position.Y % cellsize) / subcellSize);
+			return subCells[subcellX, subcellY].CalculateSubcell(position);
 		}
 	}
 
 	public int returnCount(Type type)
 	{
-		if(type == typeof(Agent))
+		if (type == typeof(Agent))
 		{
 			return totalPopulation;
 		}
-		else if(type == typeof(MaleMosquito))
+		else if (type == typeof(MaleMosquito))
 		{
 			return MaleMosquitoPopulation;
 		}
-		else if(type == typeof(femaleMosquito))
+		else if (type == typeof(femaleMosquito))
 		{
 			return FemaleMosquitoPopulation;
 		}
-		else if(type == typeof(Human))
+		else if (type == typeof(Human))
 		{
 			return humanPopulation;
 		}

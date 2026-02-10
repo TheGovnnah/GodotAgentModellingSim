@@ -25,11 +25,11 @@ public partial class Main : Node2D
 		statsPlotter.writeIntoArraysSystem(MainWorld.simulationState);
 		if(MainWorld.tick % 1000 == 0)
 		{
-			databaseHandler.writeBuffer();
+			//databaseHandler.writeBuffer();
 		}
 		if((MainWorld.tick - 100)% 1000 == 0)
 		{
-			statsPlotter.updateGraph();
+			//statsPlotter.updateGraph();
 			statsPlotter.renderGraph();
 		}
 		if(MainWorld.tick %10 == 0)

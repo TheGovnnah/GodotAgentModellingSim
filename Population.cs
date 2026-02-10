@@ -15,8 +15,8 @@ public abstract class Population
     // each population will have its own multimeshinstance
 
     //Population Data
-    protected int populationSize { get;set; }
-    public Agent[] agents { get;set; }
+    protected int populationSize { get; set; }
+    public Agent[] agents { get; set; }
     protected Environment environment;
     public Population(int popSize, ref Environment environment, Node2D parent)
     {
@@ -30,21 +30,22 @@ public class HumanPopulation : Population
 {
     Map spawnMap;
     public HumanPopulation(int popSize, ref Environment environment, Node2D parent, ref Map spawnMap) : base(popSize, ref environment, parent)
-    { 
-        if(popSize == spawnMap.totalPop)
+    {
+        if (popSize == spawnMap.totalPop)
         {
             this.spawnMap = spawnMap;
             int count = 0;
-            for(int i =0; i < 100; i++)
+            for (int i = 0; i < 100; i++)
             {
-                for(int j =0; j < 100; j++)
+                for (int j = 0; j < 100; j++)
                 {
-                    for(int k = 0; k < spawnMap.humanSpawnLocations[i,j]; k++)
+                    for (int k = 0; k < spawnMap.humanSpawnLocations[i, j]; k++)
                     {
-                        if(spawnMap.humanSpawnLocations[i,j] != 0){
-                        Vector2 startPos = new Vector2((GD.Randf()+ i)*300f, (GD.Randf()+j)*300f);
-                        agents[count] = new Human(startPos,ref environment,count);
-                        count++;
+                        if (spawnMap.humanSpawnLocations[i, j] != 0)
+                        {
+                            Vector2 startPos = new Vector2((GD.Randf() + i) * 300f, (GD.Randf() + j) * 300f);
+                            agents[count] = new Human(startPos, ref environment, count);
+                            count++;
                         }
                     }
                 }
@@ -52,29 +53,29 @@ public class HumanPopulation : Population
         }
         else
         {
-            if(popSize >= 100){
-            for(int j = 0; j < 100; j++)
+            if (popSize >= 100)
             {
-                Vector2 clusterPos = new Vector2(GD.Randf() * (environment.width- environment.cellSize), GD.Randf() * (environment.width - environment.cellSize));
-            
-                for (int i = 0; i < popSize /100; i++)
-                {   
+                for (int j = 0; j < 100; j++)
+                {
+                    Vector2 clusterPos = new Vector2(GD.Randf() * (environment.width - environment.cellSize), GD.Randf() * (environment.width - environment.cellSize));
 
-                Vector2 startPos = new Vector2(GD.Randf() * environment.cellSize, GD.Randf()* environment.cellSize);
-                agents[i + (j * popSize / 100)] = new Human(startPos + clusterPos, ref environment,i);
+                    for (int i = 0; i < popSize / 100; i++)
+                    {
+
+                        Vector2 startPos = new Vector2(GD.Randf() * environment.cellSize, GD.Randf() * environment.cellSize);
+                        agents[i + (j * popSize / 100)] = new Human(startPos + clusterPos, ref environment, i);
+                    }
                 }
-            }
             }
             else
             {
-                for(int i = 0; i < popSize; i++)
+                for (int i = 0; i < popSize; i++)
                 {
-                    Vector2 startPos = new Vector2(GD.Randf() * environment.height, GD.Randf()* environment.width);
+                    Vector2 startPos = new Vector2(GD.Randf() * environment.height, GD.Randf() * environment.width);
                     agents[i] = new Human(startPos, ref environment, i);
                 }
             }
         }
-
     }
 }
 
@@ -86,22 +87,27 @@ public class MosquitoPopulation : Population
         {
             Vector2 startPos = new Vector2(GD.Randf() * environment.width, GD.Randf() * environment.height);
 
-            if(GD.Randf() < 0.5f)
+            if (GD.Randf() < 0.5f)
             {
-                agents[i] = new femaleMosquito(startPos, ref environment,i);
+                agents[i] = new femaleMosquito(startPos, ref environment, i);
             }
             else
             {
-                agents[i] = new MaleMosquito(startPos, ref environment,i);
+                agents[i] = new MaleMosquito(startPos, ref environment, i);
             }
         }
-        foreach(Agent agent in agents)
+        int count = 0;
+        foreach (Agent agent in agents)
         {
-            if(agent.GetType() == typeof(femaleMosquito))
+            if (agent.GetType() == typeof(femaleMosquito))
             {
-                agent.infected= true;
+                agent.infected = true;
                 environment.world.simulationState.OnInfectionChange(agent);
-                break;
+                count += 1;
+                if (count > 10)
+                {
+                    break;
+                }
             }
         }
     }
@@ -114,7 +120,7 @@ public class breedingSites : Population
         for (int i = 0; i < popSize; i++)
         {
             Vector2 startPos = new Vector2(GD.Randf() * environment.width, GD.Randf() * environment.height);
-            agents[i] = new breedingSite(startPos, ref environment,i);
+            agents[i] = new breedingSite(startPos, ref environment, i);
         }
     }
 }
@@ -126,17 +132,17 @@ public class geneDriveMosquitoes : Population
         for (int i = 0; i < popSize; i++)
         {
             Mosquito mosquitoAdded;
-            Vector2 startPos = new Vector2(GD.Randf() * environment.width, GD.Randf()* environment.height);
-            if(GD.Randf() < 0.5f)
+            Vector2 startPos = new Vector2(GD.Randf() * environment.width, GD.Randf() * environment.height);
+            if (GD.Randf() < 0.5f)
             {
-                mosquitoAdded = new femaleMosquito(startPos, ref environment,i);
+                mosquitoAdded = new femaleMosquito(startPos, ref environment, i);
             }
             else
             {
-                mosquitoAdded = new MaleMosquito(startPos, ref environment,i);
+                mosquitoAdded = new MaleMosquito(startPos, ref environment, i);
             }
             agents[i] = mosquitoAdded;
-            
+
         }
     }
 }

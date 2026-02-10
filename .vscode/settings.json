@@ -1,4 +1,14 @@
 {
     "godotTools.editorPath.godot4": "/home/francis/Downloads/Godot_v4.5.1-stable_mono_linux_x86_64/Godot_v4.5.1-stable_mono_linux.x86_64",
-    "sqltools.useNodeRuntime": true
+    "sqltools.useNodeRuntime": true,
+    "duckdb.databases": [
+        {
+            "alias": "SimulationRecord",
+            "type": "file",
+            "path": "/home/francis/agentmodelv-2-2025-11-22-12-07-52/SimulationRecord.db",
+            "readOnly": true,
+            "attached": true
+        }
+    ],
+    "duckdb.defaultDatabase": "memory"
 }

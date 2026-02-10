@@ -7,7 +7,7 @@ using System.Numerics;
 
 public class Map
 {
-    public int[,] humanSpawnLocations = new int[100,100];
+    public int[,] humanSpawnLocations = new int[100, 100];
 
     public int totalPop = 0;
     public int populatedCells = 0;
@@ -20,21 +20,21 @@ public class Map
     }
     public void loadMap()
     {
-        using(StreamReader reader = File.OpenText(locationsFile))
+        using (StreamReader reader = File.OpenText(locationsFile))
         {
             string line;
             int i = 0;
-            while((line = reader.ReadLine()) != null && i <100)
+            while ((line = reader.ReadLine()) != null && i < 100)
             {
                 string[] stringLine = line.Split(',');
-                for(int j =0; j < 100; j++)
-                {   
-                    if(stringLine[j] != "-1.79769e+308")
+                for (int j = 0; j < 100; j++)
+                {
+                    if (stringLine[j] != "-1.79769e+308")
                     {
-                            int humansInCell = (int)Math.Round(float.Parse(stringLine[j]));
-                            humanSpawnLocations[i,j] = humansInCell;
-                            totalPop += humansInCell;
-                            populatedCells ++;
+                        int humansInCell = (int)Math.Round(float.Parse(stringLine[j]));
+                        humanSpawnLocations[i, j] = humansInCell;
+                        totalPop += humansInCell;
+                        populatedCells++;
                     }
                 }
                 i++;

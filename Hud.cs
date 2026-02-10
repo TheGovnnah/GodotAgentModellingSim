@@ -18,7 +18,7 @@ public partial class Hud : Control
 	{
 		timer += delta;
 
-		if(timer < 0.25) return;
+		if (timer < 0.25) return;
 		timer = 0;
 
 	}

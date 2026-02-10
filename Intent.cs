@@ -7,28 +7,28 @@ using System.Linq;
 
 public interface IIntent
 {
-    public Agent IntentOwner {get; set;}
+    public Agent IntentOwner { get; set; }
 }
 public interface IintentResolver
 {
-    Type IntentType {get;}
+    Type IntentType { get; }
     void GenericResolve(IEnumerable<IIntent> intents, World world);
 
 }
-public abstract class IntentResolver<TIntent> : IintentResolver 
+public abstract class IntentResolver<TIntent> : IintentResolver
     where TIntent : IIntent
 {
     public Type IntentType => typeof(TIntent);
     public void GenericResolve(IEnumerable<IIntent> intents, World world)
     {
-        Resolve(world,intents.Cast<TIntent>());
+        Resolve(world, intents.Cast<TIntent>());
     }
-    public abstract void Resolve(World world,IEnumerable<TIntent> intents);
+    public abstract void Resolve(World world, IEnumerable<TIntent> intents);
 }
 
 public struct AddIntent : IIntent
 {
-    public Agent IntentOwner {get;set;}
+    public Agent IntentOwner { get; set; }
     public Agent AgentToAdd;
     public Func<Agent> factory;
     public AddIntent(Agent owner, Agent agent)
@@ -50,13 +50,13 @@ public class addAgentResolver : IntentResolver<AddIntent>
     {
         this.simHandler = simHandler;
     }
-    public override void Resolve(World world,IEnumerable<AddIntent> intents)
+    public override void Resolve(World world, IEnumerable<AddIntent> intents)
     {
-        foreach(var intent in intents)
+        foreach (var intent in intents)
         {
             var owner = intent.IntentOwner;
             Agent agent;
-            if(intent.AgentToAdd != null)
+            if (intent.AgentToAdd != null)
             {
                 agent = intent.AgentToAdd;
             }
@@ -65,14 +65,14 @@ public class addAgentResolver : IntentResolver<AddIntent>
                 agent = intent.factory();
             }
             simHandler.addAgent(agent);
-            
+
         }
     }
 }
 
 public struct breedIntent : IIntent
 {
-    public Agent IntentOwner {get; set;}
+    public Agent IntentOwner { get; set; }
     public Agent BredAgent;
 
     public breedIntent(Agent owner, Agent target)
@@ -83,23 +83,23 @@ public struct breedIntent : IIntent
 }
 public class BreedingResolver : IntentResolver<breedIntent>
 {
-    public override void Resolve(World world,IEnumerable<breedIntent> intents)
+    public override void Resolve(World world, IEnumerable<breedIntent> intents)
     {
-        foreach(var intent in intents)
+        foreach (var intent in intents)
         {
             var owner = intent.IntentOwner;
             var target = intent.BredAgent;
-            
+
             target.targeted = false;
             owner.targetAgent = null;
-            
+
         }
     }
 }
 
 public struct ExclusiveTargetIntent : IIntent
 {
-    public Agent IntentOwner {get;set;}
+    public Agent IntentOwner { get; set; }
     public Agent TargetAgent;
     public ExclusiveTargetIntent(Agent owner, Agent agent)
     {
@@ -110,16 +110,16 @@ public struct ExclusiveTargetIntent : IIntent
 
 public class ExclusiveTargetResolver : IntentResolver<ExclusiveTargetIntent>
 {
-    public override void Resolve(World world,IEnumerable<ExclusiveTargetIntent> intents)
+    public override void Resolve(World world, IEnumerable<ExclusiveTargetIntent> intents)
     {
-        foreach(var intent in intents)
+        foreach (var intent in intents)
         {
             var owner = intent.IntentOwner;
             var target = intent.TargetAgent;
 
             if (!target.targeted && target.agentActive)
             {
-                target.targeted = true; 
+                target.targeted = true;
                 owner.targetAgent = target;
             }
         }
@@ -128,7 +128,7 @@ public class ExclusiveTargetResolver : IntentResolver<ExclusiveTargetIntent>
 
 public struct BiteIntent : IIntent
 {
-    public Agent IntentOwner {get;set;}
+    public Agent IntentOwner { get; set; }
     public Agent TargetAgent;
     public BiteIntent(Agent owner, Agent agent)
     {
@@ -138,18 +138,18 @@ public struct BiteIntent : IIntent
 }
 public class BiteIntentResolver : IntentResolver<BiteIntent>
 {
-    public override void Resolve(World world,IEnumerable<BiteIntent> intents)
+    public override void Resolve(World world, IEnumerable<BiteIntent> intents)
     {
-        foreach(var intent in intents)
+        foreach (var intent in intents)
         {
             var owner = intent.IntentOwner;
             var target = intent.TargetAgent;
-            
+
             target.targeted = false;
             owner.targetAgent = null;
-            if(owner.infected)
+            if (owner.infected)
             {
-                if(!target.infected)
+                if (!target.infected)
                 {
                     target.infected = true;
                     world.simulationState.OnInfectionChange(target);
@@ -157,7 +157,7 @@ public class BiteIntentResolver : IntentResolver<BiteIntent>
             }
             else if (target.infected)
             {
-                if(!owner.infected)
+                if (!owner.infected)
                 {
                     owner.infected = true;
                     world.simulationState.OnInfectionChange(owner);
@@ -170,7 +170,7 @@ public class BiteIntentResolver : IntentResolver<BiteIntent>
 
 public struct updateCellIntent : IIntent
 {
-    public Agent IntentOwner {get;set;}
+    public Agent IntentOwner { get; set; }
     public CellUpdate cellUpdate;
     public updateCellIntent(Agent owner, CellUpdate update)
     {
@@ -180,14 +180,14 @@ public struct updateCellIntent : IIntent
 }
 public class updateCellResolver : IntentResolver<updateCellIntent>
 {
-    public override void Resolve(World world,IEnumerable<updateCellIntent> intents)
+    public override void Resolve(World world, IEnumerable<updateCellIntent> intents)
     {
-        foreach(var intent in intents)
+        foreach (var intent in intents)
         {
             intent.cellUpdate.oldCell.removeAgentFromCell(intent.IntentOwner);
             intent.cellUpdate.newCell.addAgentToCell(intent.IntentOwner);
-            
-            if(intent.cellUpdate.newCell.generation <= 0)
+
+            if (intent.cellUpdate.newCell.generation <= 0)
             {
                 intent.IntentOwner.currentCell = intent.cellUpdate.newCell;
             }
@@ -201,7 +201,7 @@ public class updateCellResolver : IntentResolver<updateCellIntent>
 
 public struct updatePositionIntent : IIntent
 {
-    public Agent IntentOwner {get;set;}
+    public Agent IntentOwner { get; set; }
     public Godot.Vector2 newPos;
     public updatePositionIntent(Agent owner, Godot.Vector2 pos)
     {
@@ -212,9 +212,9 @@ public struct updatePositionIntent : IIntent
 
 public class updatePositionResolver : IntentResolver<updatePositionIntent>
 {
-    public override void Resolve(World world,IEnumerable<updatePositionIntent> intents)
+    public override void Resolve(World world, IEnumerable<updatePositionIntent> intents)
     {
-        foreach(var intent in intents)
+        foreach (var intent in intents)
         {
             intent.IntentOwner.position = intent.newPos;
             world.simulationState.OnMove();
@@ -224,7 +224,7 @@ public class updatePositionResolver : IntentResolver<updatePositionIntent>
 
 public struct updateAiStateIntent : IIntent
 {
-    public Agent IntentOwner {get;set;}
+    public Agent IntentOwner { get; set; }
     public int newState;
 
     public updateAiStateIntent(Agent agent, int state)
@@ -236,9 +236,9 @@ public struct updateAiStateIntent : IIntent
 
 public class updateAiStateResolver : IntentResolver<updateAiStateIntent>
 {
-    public override void Resolve(World world,IEnumerable<updateAiStateIntent> intents)
+    public override void Resolve(World world, IEnumerable<updateAiStateIntent> intents)
     {
-        foreach(var intent in intents)
+        foreach (var intent in intents)
         {
             intent.IntentOwner.AccessAIState(intent.newState);
         }
@@ -247,9 +247,9 @@ public class updateAiStateResolver : IntentResolver<updateAiStateIntent>
 
 public struct deactivateIntent : IIntent
 {
-    public Agent IntentOwner {get;set;}
-    
-    public Agent AgentToDeactivate {get;set;}
+    public Agent IntentOwner { get; set; }
+
+    public Agent AgentToDeactivate { get; set; }
     public deactivateIntent(Agent owner, Agent target)
     {
         IntentOwner = owner;
@@ -264,12 +264,12 @@ public class deactivateResolver : IntentResolver<deactivateIntent>
     {
         this.simulation = simulation;
     }
-    public override void Resolve(World world,IEnumerable<deactivateIntent> intents)
+    public override void Resolve(World world, IEnumerable<deactivateIntent> intents)
     {
-        foreach(var intent in intents)
+        foreach (var intent in intents)
         {
             intent.AgentToDeactivate.agentActive = false;
-            if(intent.AgentToDeactivate.targetAgent != null)
+            if (intent.AgentToDeactivate.targetAgent != null)
             {
                 intent.AgentToDeactivate.targetAgent.targeted = false;
             }
@@ -280,7 +280,7 @@ public class deactivateResolver : IntentResolver<deactivateIntent>
 
 public struct updateMoveTargetIntent : IIntent
 {
-    public Agent IntentOwner {get;set;}
+    public Agent IntentOwner { get; set; }
     public Godot.Vector2 target;
 
     public updateMoveTargetIntent(Agent owner, Godot.Vector2 moveTarget)
@@ -292,18 +292,18 @@ public struct updateMoveTargetIntent : IIntent
 
 public class updateMoveTargetResolver : IntentResolver<updateMoveTargetIntent>
 {
-    public override void Resolve(World world,IEnumerable<updateMoveTargetIntent> intents)
+    public override void Resolve(World world, IEnumerable<updateMoveTargetIntent> intents)
     {
-        foreach(var intent in intents)
+        foreach (var intent in intents)
         {
             intent.IntentOwner.movementTarget = intent.target;
-        }   
+        }
     }
 }
 
 public struct UpdateTargetAgentIntent : IIntent
 {
-    public Agent IntentOwner {get;set;}
+    public Agent IntentOwner { get; set; }
     public Agent target;
 
     public UpdateTargetAgentIntent(Agent owner, Agent newTarget)
@@ -315,18 +315,18 @@ public struct UpdateTargetAgentIntent : IIntent
 
 public class UpdateTargetAgentResolver : IntentResolver<UpdateTargetAgentIntent>
 {
-    public override void Resolve(World world,IEnumerable<UpdateTargetAgentIntent> intents)
+    public override void Resolve(World world, IEnumerable<UpdateTargetAgentIntent> intents)
     {
-        foreach(var intent in intents)
+        foreach (var intent in intents)
         {
             intent.IntentOwner.targetAgent = intent.target;
-        }   
+        }
     }
 }
 
 public struct RecoverIntent : IIntent
 {
-    public Agent IntentOwner {get;set;}
+    public Agent IntentOwner {get; set;}
     public RecoverIntent(Agent owner)
     {
         IntentOwner = owner;
@@ -337,7 +337,7 @@ public class RecoverResolver : IntentResolver<RecoverIntent>
 {
     public override void Resolve(World world, IEnumerable<RecoverIntent> intents)
     {
-        foreach(var intent in intents)
+        foreach (var intent in intents)
         {
             intent.IntentOwner.infected = false;
             world.simulationState.OnInfectionChange(intent.IntentOwner);

@@ -16,7 +16,7 @@ public class SimulationHandler
     public Environment environment;
 
     //agent information
-    public Agent[] agents { get;set; }
+    public Agent[] agents { get; set; }
     public Vector2[] positionsA;
     public Color[] colorsA;
     public Vector2[] positionsB;
@@ -35,7 +35,7 @@ public class SimulationHandler
     public ConcurrentStack<int> freeMultimeshSpaces = new ConcurrentStack<int>();
     protected MultiMeshinst multimesh { get; }
     protected int cacheSize; //defines the max possible number of agents in the simulation
-    
+
     public SimulationHandler(int cacheSize, Environment environment, Node2D parent)
     {
         GD.Print("initialising simulation handler");
@@ -44,7 +44,7 @@ public class SimulationHandler
         this.environment = environment;
 
         //initialise the multimesh
-        multimesh = new MultiMeshinst(GD.Load<Mesh>("res://TestQuadMesh.tres"), cacheSize, numAgents,parent);
+        multimesh = new MultiMeshinst(GD.Load<Mesh>("res://TestQuadMesh.tres"), cacheSize, numAgents, parent);
         //initialise agents array
         agents = new Agent[cacheSize];
         //initialise the caches 
@@ -55,18 +55,18 @@ public class SimulationHandler
         intentsByType = new ConcurrentDictionary<Type, ConcurrentBag<IIntent>>();
 
         //initialise the free space stack
-        for(int i = cacheSize -1; i >= numAgents; i--)
+        for (int i = cacheSize - 1; i >= numAgents; i--)
         {
             freeMultimeshSpaces.Push(i);
         }
 
         //initialise intent handlers
-        intentResolvers = new List<IintentResolver>{new addAgentResolver(this), new BreedingResolver(),new ExclusiveTargetResolver(),new BiteIntentResolver(), new updateCellResolver(), new updatePositionResolver(), new updateAiStateResolver(), new deactivateResolver(this), new updateMoveTargetResolver(), new UpdateTargetAgentResolver() };
-    
+        intentResolvers = new List<IintentResolver> { new addAgentResolver(this), new BreedingResolver(), new ExclusiveTargetResolver(), new BiteIntentResolver(), new updateCellResolver(), new updatePositionResolver(), new updateAiStateResolver(), new deactivateResolver(this), new updateMoveTargetResolver(), new UpdateTargetAgentResolver(), new RecoverResolver()};
+
     }
     public void addAgents(Agent[] agentsToAdd)
     {
-        foreach(Agent agent in agentsToAdd)
+        foreach (Agent agent in agentsToAdd)
         {
             addAgent(agent);
         }
@@ -81,12 +81,12 @@ public class SimulationHandler
 
     public virtual void addAgent(Agent agent)
     {
-        if(freeMultimeshSpaces.TryPop(out int output))
+        if (freeMultimeshSpaces.TryPop(out int output))
         {
             agents[output] = agent;
             agent.index = output;
-            
-            numAgents ++;
+
+            numAgents++;
             environment.world.simulationState.OnAgentAdded(agent);
 
         }
@@ -107,7 +107,7 @@ public class SimulationHandler
             return; // Previous task is still running
         }
 
-        Vector2[]targetPositions = useBufferA ? positionsA : positionsB;
+        Vector2[] targetPositions = useBufferA ? positionsA : positionsB;
         Color[] targetColors = useBufferA ? colorsA : colorsB;
         var agentFrame = agents.Where(a => a != null && a.agentActive).ToArray();
         intentsByType = new ConcurrentDictionary<Type, ConcurrentBag<IIntent>>();
@@ -120,9 +120,9 @@ public class SimulationHandler
                 agent.updateColor();
                 agent.returnCellUpdate();
                 var localintents = agent.returnIntents();
-                foreach(IIntent intent in localintents)
+                foreach (IIntent intent in localintents)
                 {
-                    intentsByType.AddOrUpdate(intent.GetType(), new ConcurrentBag<IIntent>{intent},(_, bag) => { bag.Add(intent); return bag; });
+                    intentsByType.AddOrUpdate(intent.GetType(), new ConcurrentBag<IIntent> { intent }, (_, bag) => { bag.Add(intent); return bag; });
                 }
                 targetPositions[i] = agent.position;
                 targetColors[i] = agent.color;
@@ -153,17 +153,17 @@ public class SimulationHandler
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
 
-        foreach(var intentResolver in intentResolvers)
+        foreach (var intentResolver in intentResolvers)
         {
-            if(intentsByType.TryGetValue(intentResolver.IntentType, out var intents))
-            intentResolver.GenericResolve(intents, environment.world);
+            if (intentsByType.TryGetValue(intentResolver.IntentType, out var intents))
+                intentResolver.GenericResolve(intents, environment.world);
         }
         stopwatch.Stop();
     }
 
     public void startSimulation(Population[] populations)
     {
-        foreach(Population population in populations)
+        foreach (Population population in populations)
         {
             GD.Print($"adding {population.GetType()} to simulation handler");
             addAgents(population.agents);
@@ -174,10 +174,10 @@ public class SimulationHandler
 
     public void addPopulation(Population population)
     {
-        foreach(Agent agent in population.agents)
+        foreach (Agent agent in population.agents)
         {
             IIntent intent = new AddIntent(agent, agent);
-            intentsByType.AddOrUpdate(intent.GetType(), new ConcurrentBag<IIntent>{intent},(_, bag) => { bag.Add(intent); return bag; });
+            intentsByType.AddOrUpdate(intent.GetType(), new ConcurrentBag<IIntent> { intent }, (_, bag) => { bag.Add(intent); return bag; });
         }
     }
 

@@ -5,8 +5,8 @@ public partial class StatsContainer : GridContainer
 {
 	private Main main;
 	public SimulationState simulationState;
-    private Label populationLabel;
-    private Label timeLabel;
+	private Label populationLabel;
+	private Label timeLabel;
 	private Label humanPopLabel;
 	private Label MosquitoPopLabel;
 	private Label MaleMosquitoPopLabel;
@@ -16,9 +16,9 @@ public partial class StatsContainer : GridContainer
 	public override void _Ready()
 	{
 		main = GetNode<Main>("/root/Main");
-        populationLabel = GetNode<Label>("TotalPopLabel");
-        timeLabel = GetNode<Label>("TimeLabel");
-		humanPopLabel = GetNode<Label>("HumanPop"); 
+		populationLabel = GetNode<Label>("TotalPopLabel");
+		timeLabel = GetNode<Label>("TimeLabel");
+		humanPopLabel = GetNode<Label>("HumanPop");
 		MosquitoPopLabel = GetNode<Label>("MosquitoPop");
 		MaleMosquitoPopLabel = GetNode<Label>("MaleMosquitoPop");
 		FemaleMosquitoPopLabel = GetNode<Label>("FemaleMosquitoPop");

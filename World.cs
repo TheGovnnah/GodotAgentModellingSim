@@ -8,7 +8,7 @@ public class World
 {
     //intial variables *TO BE REPLACED WITH A CONFIG FILE*
     private int initialHumanPopulation = 2658;
-    private int initialMosquitoPopulation = 200;
+    private int initialMosquitoPopulation = 500;
     private int initialBreedingSitePopulation = 10;
     private int worldHeight = 30000;
     public int worldWidth = 30000;
@@ -34,7 +34,7 @@ public class World
 
         simulationHandler.startSimulation(populations);
         //calculate djikstra map for humans at full scale
-        environment.HumanDijkstraMap = DijkstraCalculator(1,typeof(Human));
+        environment.HumanDijkstraMap = DijkstraCalculator(1, typeof(Human));
     }
 
     public void initialisePopulations()
